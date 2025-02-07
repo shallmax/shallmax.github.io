@@ -6,6 +6,7 @@ categories: [TryHackMe]
 tags: [write-up, windows]
 math: true
 mermaid: true
+---
 
 
 PRUEBA DEL PRIMER POST COPIADO.
