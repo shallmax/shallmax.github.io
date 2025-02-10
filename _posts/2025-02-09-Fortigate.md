@@ -41,7 +41,7 @@ en system luego en setting modificaremos la zona horaria correspondiente y modif
 - `show;` mostrará la direccion ip ingresada
 - `end;` para guardar los cambios
 
-### asignar IP a interfaces
+### Asignar IP a interfaces
 
 - `config system interface;`
 - `edit port2;`
@@ -60,3 +60,10 @@ en system luego en setting modificaremos la zona horaria correspondiente y modif
 - `set alias LAN;`
 - `set role lan;`
 - `end;`
+
+### Asignar IP a interfaces mediante GUI
+
+Hacemos doble click en la interfaz que se quiera configurar en Network y luego Interfaces
+![Untitled](/assets/img/fortigate/forti01.png)
+
+Le asignamos un "Alias (ISP 2)", indicamos que es WAN y le asignamos la direccion IP de esa interface
