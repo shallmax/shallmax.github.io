@@ -16,7 +16,7 @@ tags: ["fortigate, fortinet, firewall"]     # TAG names should always be lowerca
 interface \| grep -f port1; al utilizar la flag -i el comando grep queda key insensitive que significa que mostrará tanto la palabra esté en mayusculas o minusculas y un comando bastante comun es juntar la flag -if para buscar las posibles palabras que esten en minusculas o mayusculas.
 - `get | grep -if "SITE-A";` con este comando podemos ver donde se encuentra el contexto para cambiar el nombre del equipo siendo "SITE-A" el nombre actual del equipo y luego de mostrarlo podriamos ir al contexto para cambiar el nombre y así se puede utilizar cuando no sepamos exactamente donde se encuentra lo que tenemos que modificar que en este caso muestra config system global.
 
-### Activar HTTP debido a que los Fortigate vienen solo con SSH Y HTTPS habilitado
+## Activar HTTP debido a que los Fortigate vienen solo con SSH Y HTTPS habilitado
 
 - `config system interface;` para acceder a la configuracion de las interface.
 - `edit port1;` para entrar al puerto 1 y poder habilitar HTTP en ese puerto.
@@ -31,7 +31,7 @@ en system luego en setting modificaremos la zona horaria correspondiente y modif
 
 - `get system status;` nos mostrará la version del equipo, la version de la BD de antivirus, el serial number del equipo, el estado de la licencia, la fecha de expiracion de la licencia, la informacion de los recursos  de CPU RAM, el hostname del equipo, si está en modo NAT o bridge, la fecha y hora y por ultimo la razon del ultimo reinicio del equipo.
 
-### Para cambiar ip dinamica (DHCP) a estatica del puerto de administracion (port1)
+## Para cambiar ip dinamica (DHCP) a estatica del puerto de administracion (port1)
 
 - `config system interface;`
 - `edit port1;`
@@ -41,7 +41,7 @@ en system luego en setting modificaremos la zona horaria correspondiente y modif
 - `show;` mostrará la direccion ip ingresada
 - `end;` para guardar los cambios
 
-### Asignar IP a interfaces
+## Asignar IP a interfaces
 
 - `config system interface;`
 - `edit port2;`
@@ -61,7 +61,7 @@ en system luego en setting modificaremos la zona horaria correspondiente y modif
 - `set role lan;`
 - `end;`
 
-### Asignar IP a interfaces mediante GUI
+## Asignar IP a interfaces mediante GUI
 
 Hacemos doble click en la interfaz que se quiera configurar en Network y luego Interfaces
 ![Untitled](/assets/img/fortigate/forti01.png)
