@@ -46,19 +46,13 @@ en system luego en setting modificaremos la zona horaria correspondiente y modif
 
 ### Para cambiar ip dinamica (DHCP) a estatica del puerto de administracion (port1)
 
-`config system interface;`
-
-`edit port1;`
-
-`set mode static;` para cambiar de modo DHCP a estatica
-
-`show;` mostrará la direccion ip que quedó con el DHCP
-
-`set ip X.X.X.X/24;` se ingresa la ip que se quiera asignar en este caso (192.168.1.51/24)
-
-`show;` mostrará la direccion ip ingresada
-
-`end;` para guardar los cambios
+- `config system interface;`
+- `edit port1;`
+- `set mode static;` para cambiar de modo DHCP a estatica
+- `show;` mostrará la direccion ip que quedó con el DHCP
+- `set ip X.X.X.X/24;` se ingresa la ip que se quiera asignar en este caso (192.168.1.51/24)
+- `show;` mostrará la direccion ip ingresada
+- `end;` para guardar los cambios
 
 ### asignar IP a interfaces
 
