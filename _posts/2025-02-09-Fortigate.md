@@ -25,9 +25,8 @@ interface \| grep -f port1; al utilizar la flag -i el comando grep queda key ins
 
 ### Activar HTTP debido a que los Fortigate vienen solo con SSH Y HTTPS habilitado
 
-`config system interface;` para acceder a la configuracion de las interface.
-
-`edit port1;` para entrar al puerto 1 y poder habilitar HTTP en ese puerto.
+`config system interface;` para acceder a la configuracion de las interface. 
+`edit port1;` para entrar al puerto 1 y poder habilitar HTTP en ese puerto. 
 
 `show;` para ver un breve resumen del puerto y se puede apreciar que se encuentra habilitado en set allowaccess el PING, HTTPS, SSH FGFM (fgfm es para administrar el fortigate desde el puerto fortimanagment).
 
