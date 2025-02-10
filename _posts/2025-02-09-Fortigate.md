@@ -56,36 +56,20 @@ en system luego en setting modificaremos la zona horaria correspondiente y modif
 
 ### asignar IP a interfaces
 
-config system interface;
-
-edit port2;
-
-set ip X.X.X.X/30;
-
-set alias ISP-1; para asignarle un alias a la interface
-
-set role wan; para asignarle un rol que en este caso es wan
-
-next; para guardar y poder editar el siguiente puerto
-
-edit port3;
-
-set ip 45.32.12.1/30;
-
-set alias ISP-2;
-
-set role wan;
-
-next;
-
-edit port4;
-
-set ip 10.0.2.254/24;
-
-set allowaccess ping; para poder habilitar la funcion PING
-
-set alias LAN;
-
-set role lan;
-
-end;
+- `config system interface;`
+- `edit port2;`
+- `set ip X.X.X.X/30;`
+- `set alias ISP-1;` para asignarle un alias a la interface
+- `set role wan;` para asignarle un rol que en este caso es wan
+- `next;` para guardar y poder editar el siguiente puerto
+- `edit port3;`
+- `set ip 45.32.12.1/30;`
+- `set alias ISP-2;`
+- `set role wan;`
+- `next;`
+- `edit port4;`
+- `set ip 10.0.2.254/24;`
+- `set allowaccess ping;` para poder habilitar la funcion PING
+- `set alias LAN;`
+- `set role lan;`
+- `end;`
