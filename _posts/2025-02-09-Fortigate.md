@@ -67,3 +67,7 @@ Hacemos doble click en la interfaz que se quiera configurar en Network y luego I
 ![Untitled](/assets/img/fortigate/forti01.png)
 
 Le asignamos un "Alias (ISP 2)", indicamos que es WAN y le asignamos la direccion IP de esa interface
+![untitled](/assets/img/fortigate/forti02.png)
+
+Le configuramos una IP al puerto 4 que en este caso el "alias" es LAN, en el role tambien le indicamos LAN y le ingresamos la IP 10.0.1.254/255.255.255.0 y en accesos administrativos le habilitamos el PING para poder hacer ping desde el servidor que se encuentra en esa red
+![untitled](/assets/img/fortigate/forti03.png)
