@@ -44,3 +44,32 @@ en system luego en setting modificaremos la zona horaria correspondiente y modif
 
 `get system status;` nos mostrará la version del equipo, la version de la BD de antivirus, el serial number del equipo, el estado de la licencia, la fecha de expiracion de la licencia, la informacion de los recursos  de CPU RAM, el hostname del equipo, si está en modo NAT o bridge, la fecha y hora y por ultimo la razon del ultimo reinicio del equipo.
 
+### Para cambiar ip dinamica (DHCP) a estatica del puerto de administracion (port1)
+
+`config system interface;`
+`edit port1;`
+`set mode static;` para cambiar de modo DHCP a estatica
+`show;` mostrará la direccion ip que quedó con el DHCP
+`set ip X.X.X.X/24;` se ingresa la ip que se quiera asignar en este caso (192.168.1.51/24)
+`show;` mostrará la direccion ip ingresada
+`end;` para guardar los cambios
+
+### asignar IP a interfaces
+
+config system interface;
+edit port2;
+set ip X.X.X.X/30;
+set alias ISP-1; para asignarle un alias a la interface
+set role wan; para asignarle un rol que en este caso es wan
+next; para guardar y poder editar el siguiente puerto
+edit port3;
+set ip 45.32.12.1/30;
+set alias ISP-2;
+set role wan;
+next;
+edit port4;
+set ip 10.0.2.254/24;
+set allowaccess ping; para poder habilitar la funcion PING
+set alias LAN;
+set role lan;
+end;
