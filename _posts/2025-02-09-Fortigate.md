@@ -71,3 +71,21 @@ Le asignamos un "Alias (ISP 2)", indicamos que es WAN y le asignamos la direccio
 
 Le configuramos una IP al puerto 4 que en este caso el "alias" es LAN, en el role tambien le indicamos LAN y le ingresamos la IP 10.0.1.254/255.255.255.0 y en accesos administrativos le habilitamos el PING para poder hacer ping desde el servidor que se encuentra en esa red
 ![untitled](/assets/img/fortigate/forti03.png)
+
+## asignar ruta estatica mediante CLI para poder habilitar la navegacion por internet llamada Default Route
+
+- `config router static;` para entrar a la configuracion de rutas estaticas
+- `show;` para ver si hay rutas estaticas
+- `edit 1;` para crear la primera ruta estatica
+- `show;` para ver y no saldrá que tenemos nada configurado en esa ruta creada
+- `get;` para ver las opciones que tenemos para configurar
+- `set gateway 60.89.123.2;` para configurar el gateway
+- `set device port2;`
+- `show;` para ver los cambios
+- `next;`
+- `edit 2;`
+- `show;`
+- `set gateway 45.32.12.2;`
+- `set device port3;`
+- `set distance 15;` para que sea prioridad el ISP1 (entre menor distancia mayor prioridad) por el puerto 2 y en caso de que falle se activa el puerto 3 ISP2
+- `end;`
