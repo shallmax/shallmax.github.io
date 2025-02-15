@@ -89,3 +89,29 @@ Le configuramos una IP al puerto 4 que en este caso el "alias" es LAN, en el rol
 - `set device port3;`
 - `set distance 15;` para que sea prioridad el ISP1 (entre menor distancia mayor prioridad) por el puerto 2 y en caso de que falle se activa el puerto 3 ISP2
 - `end;`
+
+## asignar las Default Route mediante GUI
+
+Ingresamos la primera default Route en "Create New"
+![untitled](/assets/img/fortigate/forti04.png)
+
+y acá como es para salida de internet se le pone en el "Destination" 0.0.0.0/0.0.0.0, en el Gateway Address la IP del Gateway que en este caso la IP de la interfaz de salida 200.212.31.2 y automaticamente se asignará la "Interface" 200.212.31.1 en el numero del puerto que se encuentra esa IP de salida, en la "Administrative Distance" es para ver cual interface es principal y cual es de backup (la menor en distancia administrativa es la principal y la mayor es la de backup en caso de que se interrupa la otra interfaz) en este caso el puerto 2 es el principal con una distancia de 10 y el puerto 3 (ISP 2) es la de backup.
+![untitled](/assets/img/fortigate/forti05.png)
+
+En este caso en la distancia administrativa se le ingresa 15 para que este sea de backup en caso de que el ISP1 falle
+![untitled](/assets/img/fortigate/forti06.png)
+
+## Backups & restores por interfaz grafica de usuario (GUI)
+
+En la parte superior derecha en "Configuration" seleccionamos Backup y se descargará un archivo de texto con el nombre del HOSTNAME, la version de Fortiguet, la fecha y la hora en que se hizo el backup y al abrirlo está la configuracion del Fortinet 
+![untitled](/assets/img/fortigate/forti07.png)
+
+Podemos Encriptar el archivo con una contraseña y descargarlo en texto plano en el computador
+![untitled](/assets/img/fortigate/forti08.png)
+
+en el archivo de backup si se quiere copiar la configuracion a otro Fortiget se tiene que cerciorar que en la primera linea aparezca el mismo nombre del archivo Backup Fortiget de destino y en ese caso se recomienda hacer un backup del destino para ver la primera linea y luego copiar esa primera linea y pegarla en la linea del archivo que queramos copiar y tambien se tiene que fijar que las interfases sean la misma cantidad y de ser menor cantidad la del destino se tiene que eliminar el nombre de las interfaces para que calcen igual
+![untitled](/assets/img/fortigate/forti09.png)
+
+para restaurar el dispositivo se realiza lo siguiente en Configuration en Restore y seleccionamos el archivo de backup que queremos restaurar y en caso de que le hallamos puesto contraseña se ingresa la contraseña donde dice "Password" y luego de que el equipo se reinicia ya se encuentra restaurado
+![untitled](/assets/img/fortigate/forti10.png)
+
