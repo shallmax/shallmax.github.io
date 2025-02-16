@@ -147,5 +147,69 @@ execute restore config ftp SITE-A-25.12.2024 200.212.31.2 ftp ftp
 en "System, Admin Profiles" encontraremos los perfiles que detalla que permisos le daremos a cada usuario y eso se crea en "Create New" y ahí le asignamos que puede hacer y que no puede hacer. En "Permit usage of CLI diagnostic commands" es para permitir o no el uso de los comandos de diagnosticos por CLI y el "Override Idle Timeout" es para desconectar cada cierta cantidad de minutos la sesion.
 ![untitled](/assets/img/fortigate/forti18.png)
 
+ahora vamos a crear un usuario para agregarlo a ese perfil creado en "System, Administrators" y click en "Create New" y seleccionar "Administrator"
+![untitled](/assets/img/fortigate/forti19.png)
+
+le daremos un perfil predeterminado donde solo pueda leer las configuraciones
+![untitled](/assets/img/fortigate/forti20.png)
+
+luego se podria habilitar el segundo factor de autenticacion (Two-factor Authentication), tambien se puede restringir a que solo se conecte desde una red especifica (Restrict login to trusted hosts) de la red empresarial que en este caso podria ser la 10.0.1.0/24 para así impedir que se conecte desde internet o de una red que sea insegura y por ultimo restringir el admin a un grupo de huesped unicamente (Restrict admin to guest account provisionaling only)
+![untitled](/assets/img/fortigate/forti21.png)
+
+para poder crear el segundo factor de autenticacion se realiza una vez ya creado el usuario y se tiene que editar ese usuario para que pueda habilitar por la CLI la creacion del segundo factor de autenticacion
+![untitled](/assets/img/fortigate/forti22.png)
+
+al realizar un get se ve la variable "two-factor" que se encuentra disable y que tenemos que editar
+get two-factor; y al presionar el signo de pregunta se veran todas las opciones de autenticacion que se encuentran disponibles. El fortitoken es una aplicacion que viene con el fortigate para tener la segunda autenticacion, el sms es para hacerlo mediante mensaje de texto tambien el email para poder tener el codigo como segundo factor de autenticacion siendo este gratis a diferencia de fortitoken que es con la licencia comprada del fortigate
+![untitled](/assets/img/fortigate/forti23.png)
+
+## Primera policy (politica) para poder permitir que los host salgan a internet GUI
+
+Se crean y configuran en "Policy & Objects" donde "Firewll Policy" se crean y configuran las politicas y "Addresses, Internet Services Database, Services Schedules, Virtual IPs, IP Pools, Protocol Options" son Objetos y esos objetos luego se podrian agregar a politicas. Ahora haremos una politica que permita el trafico de internet desde la LAN hacia internet ya que Fortiget trabaja denegando con la regla implicita que viene y se tiene que permitir lo que uno quiera agregar
+![untitled](/assets/img/fortigate/forti24.png)
+
+tenemos que crear una regla que se encuentre por encima de esta regla para que pueda generar trafico a internet. Es recomendado tener una vista de las politicas por par de interfaces para así poder entender con mayor claridad como se encuentran las politicas por interfaces de entrada y por interfaces de salidas y eso se selecciona con "Interface Pair View". Para crear una nueva politica se hace en "Create New" y en el primer campo "Name" se le asigna un nombre identificativo a la politica creada, en el segundo campo "Incoming Interface" es el numero de puerto en donde ingresará o recibirá el trafico el Fortiget para esa politica (en este caso port4 LAN), en "Outgoing Interface" es por donde saldrá el trafico de esta politica (que en este caso port2 ISP1), en "Source" se podria especificar que usuario, direccion IP o que equipo será el que enviará el trafico (en este caso le pondremos el objeto "all" que corresponde a cualquiera), en "Destination" tambie pondremos el objeto "all" debido a que queremos permitir llegar a todo internet, en "Schedule" es el rango u horario que queremos que funcione está politica (en este cado seleccionamos el objeto "all"), en "Services" se refiere a puertos y servicios que hayamos definidos en la seccion de "Services" de la parte de objetos y en este caso ocuparemos "all", en "Action" indicamos si está politica se deniega o se acepta y en este caso pondremos accept, "Firewall/Network Options" como es una salida a internet tendremos que natear la direccion de origen para que todas las peticiones se hagan con la direccion ip de la interfaz del Fortigate y podriamos poner una IP o utilizar un pool de direcciones IP en caso de tenerlas, en "Logging Options" seleccionaremos que logee todo el trafico en todas las sesiones "All Sessions", que genere logs cuando inicien las sesiones "Generate Logs when Session Starts" y por ultimo habilitar la politica en "Enable this Policy"
+![untitled](/assets/img/fortigate/forti25.png)
+![untitled](/assets/img/fortigate/forti26.png)
+
+## Politica para permitir que los hosts salgan a internet por CLI
+
+- `config firewall policy;` para entrar en el contexto de politicas
+- `show;` para ver si se encuentra alguna politica creada y en este caso ninguna
+- `show full-configuration;` tampoco vemos nada creado
+- `edit 1;` para crear la primera politica 
+- `get;` como ya creamos la politica ahora saldran posibles configuraciones 
+- `set name INTERNET;` para crear el nombre de la politica
+- `set srcintf port4;` significa el puerto de entrada de trafico (LAN), en la GUI esta como incoming interface
+- `set dstintf port2;` la interfaz de salida (ISP1), en la GUI esta como Outgoing Interface
+- `set srcaddr all;` el origen del trafico, en la GUI esta como Source
+- `set dstaddr all;` el destino del trafico, en la GUI esta como Destination
+- `set schedule always;` el rango horario que está habilitada la policy 
+- `set service ALL;` todos los servicios y puertos
+- `set action accept;` para que la politica permita
+- `set nat enable;` para habilitar el NAT 
+- `show full-configuration;` para verificar que inspection-mode flow se encuentre en flow
+- `end;` ya con esto guardamos y creamos la politica mediante CLI
+![untitled](/assets/img/fortigate/forti27.png)
+
+## Configurando rutas estaticas en red LAN
+
+tenemos la siguiente topologia y tenemos que configurar primero las interfaces de los fortigate en el puerto 7 de ambos equipos;
+![untitled](/assets/img/fortigate/forti28.png)
+
+Solo dejaré la configuracion del fortigate del lado de "legales", en este caso habilitamos PING para poder probar la conexion, y le asignamos la ip 172.10.10.1/24 al puerto 7 con el alias "LEGALES" e indicamos el role LAN;
+![untitled](/assets/img/fortigate/forti29.png)
+
+Ahora crearemos dos objetos "Addresses" para despues utilizar estos objetos en todas las configuraciones y así tener un orden en las configuraciones, el primer objeto será la red vecina "CONTABILIDAD" le cambié el color, de tipo (Type) Subnet, IP/Netmask la ip de la red de CONTABILIDAD (recuerda que esta red que estoy configurando es "LEGALES" con la IP 10.0.1.0/24 y en esta parte estoy agregando la red vecina que necesito configurar para poder llegar a ella), Static route configuration lo habilitaremos para poder despues este objeto utilizarlo en el ruteo de la red y con esto cuando necesitemos modificar la red solo modificamos el objeto correspondiente y en todas las demas configuraciones que se encuentra ese objeto se modificará automaticamente; 
+![untitled](/assets/img/fortigate/forti30.png)
+
+Ahora crearemos un segundo objeto llamado "RED LOCAL", con la ip de la red 10.0.1.0/24, y tambien le habilitamos el Static route configuration para poder utilizar este objeto en el ruteo de la red
+![untitled](/assets/img/fortigate/forti31.png)
+
+Ahora volvemos a Network y en Static Routes agregamos la red "CONTABILIDAD" para indicarle al Fortiget donde se encuentra esa red y así poder comunicarse agregando el objeto recien creado "CONTABILIDAD" con la IP del Gateway 172.10.10.2 y automaticamente aparece la interface "LEGALES (port7)" que es la interfaz del fortiget local llamada legales
+![untitled](/assets/img/fortigate/forti32.png)
+
+En caso de no agregar el objeto se tiene que hacer en vez de Named Address en Subnet y asignar la IP correspondiente a la red vecina y el Gateway de como llegar a esa red pero es mas recomendable y limpio hacerlo mediante objetos Address
+![untitled](/assets/img/fortigate/forti33.png)
 
 
