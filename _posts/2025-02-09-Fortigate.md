@@ -115,3 +115,37 @@ en el archivo de backup si se quiere copiar la configuracion a otro Fortiget se 
 para restaurar el dispositivo se realiza lo siguiente en Configuration en Restore y seleccionamos el archivo de backup que queremos restaurar y en caso de que le hallamos puesto contraseña se ingresa la contraseña donde dice "Password" y luego de que el equipo se reinicia ya se encuentra restaurado
 ![untitled](/assets/img/fortigate/forti10.png)
 
+## Revision por interfaz grafica (GUI)
+
+Es mas que nada un backup pero queda guardada en el mismo equipo aunque no es recomendable tomarlo como backups debido a que si el equipo falla no se podrá sacar la configuracion del equipo. Pero si se puede utilizar para ver si se pide a alguien que haga tal tarea se puede comparar entre 2 backups cuales fueron los cambios que se realizaron en el equipo. Para ingresar en la seccion "Revision" se ingresa en admin, luego "Configuration" y "Revision". Para la primera revision se hace click en Save Changes y con esto guarda la configuracion en un backup y al crearla con el boton derecho se puede poner "Revert" para aplicar ese backup
+![untitled](/assets/img/fortigate/forti11.png)
+
+para ver el cambio, cambié el alias del ISP del puerto 2
+![untitled](/assets/img/fortigate/forti12.png)
+
+ahora ingreso en revision para guardar una segunda revision con los cambios realizados 
+![untitled](/assets/img/fortigate/forti13.png)
+
+y al seleccionar las 2 revision y al hacer click en "Diff" se verá en rojo la configuracion antigua y en verde el cambio que se realizó en la ultima configuracion (modificacion del nombre del puerto 2)
+![untitled](/assets/img/fortigate/forti14.png)
+
+ahora haremos una aplicacion de una revision para volver a como estaba el nombre del puerto haciendo click en la revision que queremos y seleccionar "Revert" y con eso reiniciará el equipo con esa configuracion avisandonos siempre que el equipo se reiniciará
+![untitled](/assets/img/fortigate/forti15.png)
+nota al aplicar los backups no alteran o borran las revisiones que se hicieron en ese rango de tiempo es por eso que es buena practica tener revisiones pero importante descargarlas por si equipo se daña
+
+## Backups & restores por interfaz linea de comando (CLI)
+
+execute backup config ftp SITE-A-25.12.2024 200.212.31.2 ftp ftp; donde el primer ftp es para indicar que el archivo se copiará mediante el protocolo FTP, luego pide el nombre del archivo que será creado que en este caso SITE-A-25.12.2025 le indiqué el hostname y la fecha en que se realizó el backup luego indica la direccion IP del FTP que en este caso es la de ISP-1 200.212.31.2 y los 2 ultimos ftp son el primer el usuario ftp y el segundo la password que tambien es ftp y listo
+![untitled](/assets/img/fortigate/forti16.png)
+
+para restaurar es lo mismo pero se reemplaza backup por restore y luego se reiniciará para cargar el archivo de configuracion nuevo
+execute restore config ftp SITE-A-25.12.2024 200.212.31.2 ftp ftp
+![untitled](/assets/img/fortigate/forti17.png)
+
+## Gestionando usuarios administradores
+
+en "System, Admin Profiles" encontraremos los perfiles que detalla que permisos le daremos a cada usuario y eso se crea en "Create New" y ahí le asignamos que puede hacer y que no puede hacer. En "Permit usage of CLI diagnostic commands" es para permitir o no el uso de los comandos de diagnosticos por CLI y el "Override Idle Timeout" es para desconectar cada cierta cantidad de minutos la sesion.
+![untitled](/assets/img/fortigate/forti18.png)
+
+
+
