@@ -328,7 +328,7 @@ Para configurar el balanceo de carga de ECMP basado en peso (weight-based) se pu
 - `set weight 10;` para que esta tenga menor peso y así la ruta 2 es prioridad en el balanceo
 - `next;` para guardar
 - `show;` para mostrar las rutas con los pesos configurados
-- `end;` para guardar
+- `end;` para guardar 
 ![untitled](/assets/img/fortigate/forti59.png)
 ![untitled](/assets/img/fortigate/forti60.png)
 
