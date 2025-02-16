@@ -329,6 +329,7 @@ Para configurar el balanceo de carga de ECMP basado en peso (weight-based) se pu
 - `next;` para guardar
 - `show;` para mostrar las rutas con los pesos configurados
 - `end;` para guardar 
+
 ![untitled](/assets/img/fortigate/forti59.png)
 ![untitled](/assets/img/fortigate/forti60.png)
 
@@ -349,6 +350,7 @@ como comenté que tambien se puede hacer a nivel de interfaz (recuerda que solo 
 - `set weight 50;` puede ir entre 0 a 255 y el mayor numero es mayor prioridad
 - `next;` para guardar
 - `end;` para salir
+
 ![untitled](/assets/img/fortigate/forti64.png)
 
 por ultimo queda el modo basado en volumen o en uso y acá lo que se configura es el umbral de trafico y una vez que ese trafico llega al umbral o limite se cambia al otro proveedor. En esta configuracion solo se puede hacer en la interfaz y no en la ruta como el anterior modo
