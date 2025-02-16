@@ -212,4 +212,229 @@ Ahora volvemos a Network y en Static Routes agregamos la red "CONTABILIDAD" para
 En caso de no agregar el objeto se tiene que hacer en vez de Named Address en Subnet y asignar la IP correspondiente a la red vecina y el Gateway de como llegar a esa red pero es mas recomendable y limpio hacerlo mediante objetos Address
 ![untitled](/assets/img/fortigate/forti33.png)
 
+Ahora crearemos la politica para el evío de trafico y el recibimiento de trafico de esa red vecina, en Name pondremos "TO_CONTABILIDAD" debido a que queremos enviar A contabilidad el trafico por lo tanto recibiremos el trafico desde (Incoming Interface) "LAN(port4)" y lo sacaremos (Outgoing Interface) por el puerto de salida "LEGALES(port7)", el origen (Source) será el objeto creado "RED LOCAL", el destino (Destination) será CONTABILIDAD, junto con las otras configuraciones de la imagen pero lo importante es que NAT se encuentre desactivado ya que como son redes locales no necesita realizar el nateo de la IP y los fortigate saben como llegar a las redes por la configuracion que le hicimos en Static Routes por lo tanto eso tiene que desactivarse
+![untitled](/assets/img/fortigate/forti34.png)
 
+Ahora la policy anterior permite el trafico de ida (TO) pero ahora necesitamos crear una policy con el trafico de vuelta y esto se hace con click derecho en la policy en "Clone Reverse" y con esto invertirá los puertos y solo se tiene que configurar el nombre y habilitarla... Nota; no se hace reversa en la politica de INTERNET debido a que esa politica tiene la configuracion NAT habilitada 
+![untitled](/assets/img/fortigate/forti35.png)
+
+Ahora que ya le asignamos el nombre "FROM_CONTABILIDAD" queda habilitarla en Set Status Enable y con esta politica reversiva se invertió el origen (source) y el Destino junto con los puertos correspondientes (del puerto4 al 7 y del puerto7 al 4) y una vez haciendo lo mismo en el otro foriget con los respectivos cambios ya tendria comunicacion las 2 redes locales
+![untitled](/assets/img/fortigate/forti36.png)
+
+## Enrutamiento basado en politicas
+
+la "Policy Routes" sirve para poder reenviar cierto tipo de trafico por cierta interfaz indicada, por ejemplo en estos momentos todo el trafico de "contabilidad" o "Site-B" viaja a travez de la configuracion de ruta estatica que hicimos anteriormente por el puerto de la red 172.10.10.0/30 (Port7) y lo que queremos hacer con esta Policy Routes es que solo el protocolo TCP HTTP(80) viaje por el ISP1 (Port2). Nota; es importante señalar que esto no es configuracion de ruta, mas bien es un criterio que nosotros definimos para reenviar el trafico de un lado a otro por la ruta que nosotros queramos
+![untitled](/assets/img/fortigate/forti37.png)
+
+de la siguiente forma donde Incoming interface es LAN, Source Address es la IP del origen del objeto que se quiere desviar que en este caso el pc Workstation, el Destination Address es la direccion del servidor, luego el puerto que queremos desviar que en este caso HTTP y escribimos el puerto a desviar en destino (80) y por ultimo Forward Trafic (reenvío de trafico) y activamos Outgoing Interface (interfaz saliente) escribiendo el Gateway de esa interfaz y ya con esto tenemos que todos los servicios viajan por el puerto de la red 172.10.10.0 y solo el servicio http viaja por ISP1 por la red 60.89.123.0
+![untitled](/assets/img/fortigate/forti38.png)
+
+Con esta imagen vemos que aun no hemos realizado ninguna prueba con el protocolo 80 debido a que el Hit Count se encuentra en 0;
+![untitled](/assets/img/fortigate/forti39.png)
+
+y ahora que intentamos de acceder al servidor por el navegador por http (puerto 80) nos marca el Hit Count en "1"  eso es una prueba de que el trafico si se está desviando y el resto del trafico como el ping se sigue realizando de forma normal por la Static Routes que configuramos anteriormente por la interfaz directa;
+![untitled](/assets/img/fortigate/forti40.png)
+
+## monitoreo de rutas por GUI
+
+Sirve para ver las rutas activas, tambien mediante el Route Lookup sirve para ver por donde se encuentra saliendo la solicitud por ejemplo veremos como se llega al host 10.0.2.10
+![untitled](/assets/img/fortigate/forti41.png)
+
+y el resultado será la interfaz del puerto 7
+![untitled](/assets/img/fortigate/forti42.png)
+
+tambien podriamos ver por donde saldriamos si ponemos los DNS de google donde en el destino ponemos los DNS de google luego el puerto que dns es el 53 TCP y desde la red LAN. Esto es muy importante para ver cuando se tienen muchas rutas y queremos saber por donde estamos saliendo, y tambien es bueno para algun debug en caso de que estemos saliendo por alguna ruta equivocada. Tambien es importante entender que aca se ven las rutas activas independiente si están conectadas o no ya que por ejemplo no se ve la ruta ISP2 debido a que la ISP1 es la que se encuentra activa con una menor distancia administrativa
+![untitled](/assets/img/fortigate/forti43.png)
+
+## Monitoreo de rutas por CLI
+
+- `get router info routing-table;` y al escribir el signo de pregunta tendremos las siguientes opciones donde nosotros mas veremos "details, all, static, connected y database"
+- `get router info routing-table connected;` veremos las rutas del tipo conectadas
+- `get router info routing-table static;` veremos las rutas estaticas
+- `get router info routing-table all;` veremos todas las rutas (static y connected)
+- `get router info routing-table database;` salen las mismas que en all pero acá sale la inactiva del puerto 3 (ISP2) que es la que no tiene el signo "asterisco>" cosa que en all no aparece la inactiva 
+cuando un puerto esta caido muestra despues del puerto "inactive" que significa que el puerto esta caido como en la siguiente imagen
+![untitled](/assets/img/fortigate/forti44.png)
+
+## Monitoreo de policy route por cli
+
+- `diagnose firewall proute list;` se puede ver la policy route creada donde la primera linea muestra los criterios programados, source wildcard muestra la direccion de origen, destination wildcar es el destino, gwy es el getway, dport es el destination port (80), protoclo 6 es TCP
+![untitled](/assets/img/fortigate/forti45.png)
+
+## Atributos de las rutas
+
+unos de los atributos ya mencionados es la distancia administrativa que a menor distancia es la prioridad y en este caso le pusimos a ISP-1 una distancia de 10 y a ISP-2 una distancia de 15 para que siempre el trafico viaje por ISP-1. Ahora aparte de eso está la metrica y priority que prority es el parametro que tomará en cuenta el fortigate en caso de que la distancia sea la misma y al igual que la distancia entre menor es el numero de priority esa es la que tomará el fortiget como ruta principal, y el campo de metrica es utilizado por los protocolos de enrutamiento dinamico OSPF, RIP, BGP y eso nosotros no lo vemos por el momento. En la imagen se ve que ambos tienen la misma distancia
+![untitled](/assets/img/fortigate/forti46.png)
+
+Ahora le cambiamos la Priority a ISP-1 a 3 para que tome como principal el ISP-2, recordar que entre menor priority es el principal y en este caso ISP-2 tendrá priority 0 por lo tanto ese quedará como principal
+![untitled](/assets/img/fortigate/forti47.png)
+
+Ahora crearemos una politica para salir a internet por el ISP-2 ya que eso no lo tenemos y solo tenemos la politica de ISP 1 como se ve en la siguiente imagen
+![untitled](/assets/img/fortigate/forti48.png)
+
+la politica quedaria de la siguiente manera;
+![untitled](/assets/img/fortigate/forti49.png)
+
+Ahora que ya están las 2 politicas y le pusimos el contador en 0 iremos al active directory a navegar por internet y veremos si aumentan los bytes en INTERNET ISP2 segun la priority indicada
+![untitled](/assets/img/fortigate/forti50.png)
+
+y ahora se muestra que la que tiene trafico es la que está funcionando y es la ISP-2
+![untitled](/assets/img/fortigate/forti51.png)
+
+la metrica en la CLI aparecen con el comando;
+- `get router info routing-table database;` donde el primer 15 es la distancia luego el 0 siguiente es la metrica que en este caso lo dejamos en 0, luego el 3 es priority y por ultimo el siguiente 0 es el wild o peso que mas adelante lo veremos. En el port3 no aparece la priority porque lo dejamos por defecto en 0 y solo modificamos el port2
+![untitled](/assets/img/fortigate/forti52.png)
+
+## Routing para servicios de Internet
+
+Si queremos enviar cierto trafico de internet por alguna interfaz especifica por ejemplo queremos que los servidores de DNS de google salgan solo por la interfaz de ISP2 tenemos que ir a Network, Static Routes y en Internet Service agregar Google-DNS, y escribimos el Gateway Address de ISP2 y ya con esto cuando necesitemos los DNS de google saldrá por esa interfaz grafica. (no hay imagen debido a que no se puede realizar el laboratorio debido a que solo contamos con la licencia de evaluacion)
+
+## ECMP
+
+EMCP (multiples rutas de igual costo) mas conocido como balanceo de carga mediante ECMP significa que el trafico de la red sea distribuido entre el ISP1 y el ISP2, de tal manera que ambos se encuentren activos simultáneamente. Para poder activar el balanceo de carga ICMP se tiene que cumplir con 3 condiciones que son la misma distancia administrativa, misma priorida y la misma metrica y por ultimo tener el mismo destino (en este caso internet 0.0.0.0)    
+![untitled](/assets/img/fortigate/forti53.png)
+
+el primer corchete es la distancia administrativa junto con la metrica [10/0] y el segundo corchete es la prioridad junto con wild o peso [5/0]
+![untitled](/assets/img/fortigate/forti54.png)
+
+aun con esto no estamos balanceando la carga debido a que ICMP por defecto viene con modo basado en ip de origen (source-ip-based) por lo tanto siempre enviará por la misma ruta segun la direccion ip de origen que sea, los otros modos son basado en peso (weight-based), basado en uso o spill-over (usage-based) y por ultimo basado en direccion ip de origen y destino (source-dest-ip-based). El modo por defecto source-ip-based (basado en ip de origen) significa que al momento de llegar el primer intento de navegar por internet (o primera peticion) por parte del host, el fortigate hace una especie de sorteo y determina en por cual ISP o interfaz le tocará siempre a ese host salir hacia internet hasta que las sesiones de ese host expire y ECMP tenga que realizar el "sorteo" nuevamente.
+![untitled](/assets/img/fortigate/forti55.png)
+
+el otro metodo mas utilizado es el source-dest-ip-based que es parecido al anterior pero este aparte de enfocarse en la ip de origen para seleccionar la interfaz de salida tambien se fija en la direccion de destino. Por ejemplo, si el host quiere ir a la pagina google.com en el sorteo podria establecer que la ruta SIEMPRE será la interfaz 2 (ISP1) para esa direccion ip de destino (google.com) y el mismo host si quiere navegar en fortinet.com podria perfectamente establecer la ruta de la interfaz 3 (ISP2) y así hasta que nuevamente tenga que realizar el "sorteo" nuevamente. La forma de seleccionar este modo es;
+- `config system settings;` para posicionarse en el contexto de configuracion
+- `get | grep ecmp;` aplicamos grep para filtrar solamente ecmp y muestre en que modo está
+- `set v4-ecmp-mode source-dest-ip-based;` para seleccionar este modo de balanceo de carga
+- `end;` para guardar la modificacion
+![untitled](/assets/img/fortigate/forti56.png)
+
+y para probar haremos ping a distintos destinos y veremos en "Firewall Policy" por donde sale el trafico y nos daremos cuenta de que ambos proveedores se están utilizando;
+![untitled](/assets/img/fortigate/forti57.png)
+
+y si vamos a "Dashboard" en "FortiView Sessions" y hacemos que muestre "Destination Interface" veremos que han salido por ISP1 y tambien por ISP2 (aunque igual en menor medida)
+![untitled](/assets/img/fortigate/forti58.png)
+
+Para configurar el balanceo de carga de ECMP basado en peso (weight-based) se puede hacer en la interfaz o en la ruta (SOLO EN UNO) y en este caso lo haremos en la ruta. En lo que respecta al peso este es el unico caso en fortigate que el mayor numero de peso es mayor prioridad
+- `config system settings;` para entrar en ese contexto de configuracion
+- `get | grep ecmp;` para ver en que modo está
+- `set v4-ecmp-mode weight-based;` para ponerlo en modo basado en peso
+- `end;` para guardar los cambios
+- `config router static;` para entrar en las rutas y ahí asignarle el peso
+- `show;` muestra las rutas de los puertos 
+- `edit 2;` para editar esa ruta (ISP2)
+- `get;` para ver el weight por defecto que se encuentra en 0
+- `set weight 20;` es el numero del peso que puede ir de 0 a 255
+- `next;` para guardar
+- `edit 1;` para editar esta ruta (ISP1)
+- `set weight 10;` para que esta tenga menor peso y así la ruta 2 es prioridad en el balanceo
+- `next;` para guardar
+- `show;` para mostrar las rutas con los pesos configurados
+- `end;` para guardar
+![untitled](/assets/img/fortigate/forti59.png)
+![untitled](/assets/img/fortigate/forti60.png)
+
+Para ver la ruta que está como prioridad y verificar los pesos de cada ruta (port3 y port2) se realiza con el siguiente comando donde lo vemos en el segundo digito del segundo corchete y donde la primera ruta que aparece es la prioridad
+- `get router info routing-table database;` para ver las rutas de las interfaces
+![untitled](/assets/img/fortigate/forti61.png)
+
+ya con esto nos damos cuenta que el ISP2 es prioridad y tiene mayor navegacion por ese puerto
+![untitled](/assets/img/fortigate/forti62.png)
+
+y en las sesiones tambien se puede observar por cual interfaz sale mas trafico
+![untitled](/assets/img/fortigate/forti63.png)
+
+como comenté que tambien se puede hacer a nivel de interfaz (recuerda que solo se puede hacer o a nivel de rutas o a nivel de interfaz pero nunca ambos) y para modificarlo en la interfaz se realiza lo siguiente;
+- `config system interface;` para entrar en el contexto de configuracion de interfaz
+- `edit port2;` para editar el puerto de internet que es el ISP1
+- `get | grep weight;` para verificar el numero de peso que tiene
+- `set weight 50;` puede ir entre 0 a 255 y el mayor numero es mayor prioridad
+- `next;` para guardar
+- `end;` para salir
+![untitled](/assets/img/fortigate/forti64.png)
+
+por ultimo queda el modo basado en volumen o en uso y acá lo que se configura es el umbral de trafico y una vez que ese trafico llega al umbral o limite se cambia al otro proveedor. En esta configuracion solo se puede hacer en la interfaz y no en la ruta como el anterior modo
+- `config system setting;`
+- `get | grep ecmp;` para ver en que modo se encuentra
+- `set v4-ecmp-mode usage-based;` para modificarlo a este modo basado en uso o volumen
+- `end;` para salir y guardar
+- `config system interface;` 
+- `edit port2;`
+- `set spillover-threshold 300;` puede ir de 0 a 16776000
+- `next;` guardarmos
+- `edit port3;` para editar ahora el ISP2
+- `set spillover-threshold 500;` este es prioridad y una vez que llegue al umbral pase al ISP1
+- `end;` guardamos y salimos
+![untitled](/assets/img/fortigate/forti65.png)
+
+Para deshacer los cambios de ECMP;
+- `config system interface;` para editar los puertos
+- `edit port2;`
+- `unset spillover-thashold;` el commando unset hace que los valores queden por defecto
+- `get | grep spill;` para verificar que el valor se encuentre en 0 (por defecto)
+- `next;` para guarda
+- `edit port3;`
+- `unset spillover-thashold`
+- `config router static;` para ir a las rutas estáticas
+- `show;` para ver el peso de las rutas, la prioridad y volver a la distancia como estaba 10 y 15
+- `edit 1;`
+- `unset weight;`
+- `unset distance;`
+- `unset prority;`
+- `next;`
+- `edit 2;`
+- `unset priority;`
+- `unset weight;`
+- `set distance 15;` para dejar el ISP1 como ruta por defecto y esta como backup
+- `end;`
+- `get router info routing-table database;` para confirmar que solo se navega por port2 (ISP1)
+
+## LINK HEALTH MONITOR
+
+Esta herramienta sirve para que el fortiget mediante PING hacia por ejemplo los DNS de Google pueda ir monitoreando si se encuentra con internet (ping exitoso) y en caso de que el ping no sea exitoso hará el cambio de ISP al puerto 3 y bajará el puerto 2 debido a que asume que hay un problema de conexión
+
+- `config system link-monitor;`
+- `show;` para ver que no tenemos nada configurado
+- `edit 1;` para agregar una entrada y entrar en el cotexto correcto
+- `get;` para ver todas las configuraciones que podríamos detallar
+- `set srcintg port2;` le indicamos que este es el ISP1
+- `set server 8.8.8.8;` hacia donde se realizarán las pruebas de ping
+- `set Gateway-ip 200.212.31.2;` el Gateway de ISP1
+- `show;` para ver lo que hemos configurado
+- `get;` ya vemos todo configurado y lo importante es que update-static-route se encuentre habilitado (enable) para que actualice las rutas estáticas
+- `end;` para guardar
+
+Para borrar el link health monitor se hace de la siguiente manera;
+- `config system link-monitor;`
+- `show;` para ver el numero de entrada de contexto
+- `delete 1;` para borrar esa entrada
+- `show;` para verificar que no esté
+- `end;` para guardar y salir
+
+## Packet sniffer por CLI
+
+Esto es muy util para realizar debug y se necesite correr un sniffer. El detalle del comando es; “diagnose sniffer” y el primer parámetro de este comando es qué es lo que queremos capturar y en este caso es “packet”, el segundo parámetro es en qué interfaz queremos hacer la escucha y en este caso “por4” o también se puede poner “any” para ecuchar todas las interfaces, y el siguiente parámetro son los filtros y en este caso pondremos el protocolo “ICMP”
+- `diagnose sniffer;` para hacer una escucha en tiempo real por la línea de comando y ver si estamos capturando algún criterio
+- `diagnose sniffer packet port4 icmp;` y ya con este comando el fortigate está a la escucha del trafico ICMP
+
+Para detallar mas la escucha haremos por ejemplo que solo muestre los paquetes de cierta computadora en especifica y esto se realiza agregando comillas “” y && host x.x.x.x ;
+- `diagnose sniffer packet port4 “icmp && host 10.0.1.10”;`
+
+En este caso se captura tanto el trafico de ida como de vuelta “request” y “reply” y ahora haremos que solo nos muestre el trafico de solicitud “request” con el comando “src host” que significa que muestre solo los paquetes de solicitud de esa IP
+- `diagnose sniffer packet port4 “icmpt && src host 10.0.1.10”;`
+
+Si queremos que muestre solo el trafico del destino de la IP especifica se realiza con el comando “dst host”
+- `diagnose sniffer packet port4 “icmp && dst host 10.0.1.10”;`
+
+Ahora haremos una escucha del protocolo UDP del puerto 53 que corresponde a DNS y al realizar el ping mostrará ese trafico con la resolución de DNS de la pagina
+- `diagnose sniffer packet port4 “udp && port 53 && host 10.0.1.10”;`
+
+Y lo mismo que el anterior si en caso de que solo queremos capturar los paquetes que se enviar agregamos el comando “src”
+- `diagnose sniffer packet port 4 “udp && port 53 && src host 10.0.1.10”;`
+
+Ademas de los filtros ya mencionados también podemos especificar el nivel de verbosidad que significa que tanta información se requiere mostrar por pantalla y esto va por niveles desde el 1 hasta el 6 siendo el 4 el mas utilizado ya muestra la cabecera IP y el nombre de la interfaz
+- `diagnose sniffer packet port4 “icmpt && host 10.0.1.10” 4;` muestra el trafico que está siendo originado y enviado por el puerto correspondiente (port4)
+
+En lugar de indicar el puerto 4 (port4) ponemos “any” mostrará el puerto de donde entra el trafico y por donde sale siendo este comando muy importante para verificar errores de rutas. El “port4 in” significa que el trafico icmp está entrando por esa interfaz con esa dirección IP. Por otra parte el “port2 out” está enviado hacia afuera (internet) desde esa direccion IP hacia la otra dirección IP. Luego el “port2 in” significa que recibe respuesta desde esa IP con el destino a otra IP. Y por ultimo en por el puerto 4 sale la respuesta a la pagina desde la pagina hacia el host de destino.
+- `diagnose sniffer packet any “icmp” 4;`
+
+Y si luego del numero de verbosidad se agrega otro numero por ejemplo el 5 significa que solo se mostrará los 5 primeros paquetes de esa escucha
+- `diagnose sniffer packet port4 “icmpt && src host 10.0.1.10” 4 5;`
