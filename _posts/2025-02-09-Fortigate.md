@@ -440,3 +440,36 @@ En lugar de indicar el puerto 4 (port4) ponemos “any” mostrará el puerto de
 
 Y si luego del numero de verbosidad se agrega otro numero por ejemplo el 5 significa que solo se mostrará los 5 primeros paquetes de esa escucha
 - `diagnose sniffer packet port4 “icmpt && src host 10.0.1.10” 4 5;`
+
+## SD-WAN
+
+permite hacer un uso efectivo de internet mediante diferente algoritmos de balanceos. Es decir SD-WAN es la evolucion de ECMP porque incorpora diferentes mecanismos de medicion de estos vinculos, de manera tal que mediante esos indicadores será capaz de enviar el trafico por el enlace mas optimo. Para poder asociar los puertos 2 y 3 (ISP1 y ISP2) a nuestra interfaz SD-WAN los puertos no deben estar en uso. Para poder deshacer las configuraciones de estas interfaces se tiene que ir a "Network" y en "Interfaces" a la derecha indica "Ref" y el numero indica la cantidad de configuraciones que tienen las interefaces y de ahí se pueden eliminar directamente haciendo click con boton derecho y "delete". Con esto eliminamos las todas las configuraciones a estas interfaces como las politicas y rutas estaticas donde hacen referencia a estas interfaces pero las interfaces aun seguiran configuradas. Debido a que borramos las rutas estaticas ya no tendria internet el equipo y tampoco los hosts conectados a este.
+Primero crearemos una zona de SD-WAN que es una interfaz de SD-WAN. Para eso vamos a "Network" luego a "SD-WAN" y ahí pinchamos en "Create New" y seleccionamos "SD-WAN Zone" y le asignamos un nombre como por ejemplo SDWAN-LAB para identificarla. Hacemos click en "OK" y volvemos a entrar en la recien creada para poder agregar asociaciones en "Interface members" que en este caso serian las interfaces 2 y 3
+![untitled](/assets/img/fortigate/forti66.png)
+
+Se necesitan marcar las interfaces para que salgan en las "Interface Members" como en la imagen
+![untitled](/assets/img/fortigate/forti67.png)
+
+con esto creamos una zona DS-WAN o una interfaz virtual de tipo SD-WAN y le asociamos nuestros ISP1 y ISP2 con sus respectivos gateways a la zona.
+![untitled](/assets/img/fortigate/forti68.png)
+
+Lo que queda por hacer es volver a crear las rutas estaticas para que pueda salir a internet y las politicas para que los hosts puedan navegar.
+Para crear la ruta estatica es como siempre en "Network" "Static Routes" pinchamos en "Create New" y acá como es para la salidad de internet el destino es "0.0.0.0/0.0.0.0" pero no pondremos Gateway debido a que ya lo ingresamos en la zona SD-WAN y en "Interface" seleccionamos "SDWAN-LAB" que es la que creamos recien y con esto el fortiget tendrá salida a internet 
+![untitled](/assets/img/fortigate/forti69.png)
+
+Ahora crearemos la Policy para que los hosts puedan navegar por internet estableciendo el puerto de salida nuestra SDWAN-LAB creada... nota; una vez que un puerto es asociado como miembro a una SD-WAN no podrá ser referenciado individualmente
+![untitled](/assets/img/fortigate/forti70.png)
+
+ya con esto tenemos mas distribuido el trafico mediante por los 2 ISPs con el metodo de balanceo basado en origen y destino seleccionado en la pestaña SD-WAN Rules 
+![untitled](/assets/img/fortigate/forti71.png)
+
+## SD-WAN Perfomance SLAs
+
+Esto es muy parecido a Link Health Monitor donde utilizamos los dns de google como testigo para determinar si el ISP1 estaba funcionando de forma correcta. En este caso fortigate trae por defecto testigos muy confiables como aws.amazon.com o los DNS de fortigate entre otros para determinar no solo el funcionamiento de nuestros enlaces, sino que en este caso excede a lo que vimos con Link health Monitor, ya que en ese caso solo nos interesaba si el PING respondia o no, en cambio con Perfomance SLAs ademas de ver si responde o no tambien podemos determinar el "Packet Loss", la "Latency" y el "Jitter". Con estos criterios fortigate puede determinar si el ISP2 es mas confiable que el ISP1 y enviar el trafico por ese enlace. Esa es la finalidad de este servicio muy utilizado en las empresas.
+![untitled](/assets/img/fortigate/forti72.png)
+
+En este caso utilizaremos el de Amazon donde primero encontraremos el nombre. "Probe mode" significa de qué forma hará las pruebas contra amazon, en la opcion "Active" fortigate envia paquetes contra el destino (aws.amazon.com), en la opcion "Pasive" fortigate no envia paquetes de prueba si no que utiliza el trafico que nosotros generemos para hacer la medicion, y por ultimo en la opcion "Prefer Passive" es igual que "Pasive" pero en el caso de que nosotros no generemos el trafico contra amazon el fortinet empezará a enviar sus propios paquetes como si estuviera en modo "Active". En protocolo son las pruebas ya sea en tipo "Ping", paquetes tipo "HTTP" y paquetes "DNS". En "Server" ponemos el testigo que es a quien se le hará las pruebas y se pueden agregar como maximo 2 testigos. En "participants" se define que miembros pertenecientes de SD-WAN vamos a estar utilizando para hacer la medicion, pudiendo especificar si es el ISP1 o el ISP2 o seleccionar "ALL SD-WAN Members" para seleccionar ambos. "SLA Target" por ahora lo desactivaremos para verlo mas adelante. En "Link Status" es para determinar si el vinculo está activo o no (muy parecido a Link Health Monitor). En "Check interval" significa que en intervalos de 1000ms (1 segundo) si caen 5 paquetes "Failures before inactive" den por caido el enlace (tardará 5 segundos en que caiga en enlace por los 5 paquetes solicitados cada 1 segundo). "Update Static route" indica que quite de las rutas estaticas ese vinculo que falló. Y por ultimo "Restore link after" significa que pasaran 10 check para que vuelta estar arriba el enlace (osea 10 segundos)
+![untitled](/assets/img/fortigate/forti73.png)
+
+y con esto verificamos la estabilidad de los enlaces junto con el porcentaje de paquetes perdidos o si hay algun enlace caído
+![untitled](/assets/img/fortigate/forti74.png)
