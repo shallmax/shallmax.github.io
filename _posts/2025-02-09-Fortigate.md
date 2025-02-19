@@ -473,3 +473,7 @@ En este caso utilizaremos el de Amazon donde primero encontraremos el nombre. "P
 
 y con esto verificamos la estabilidad de los enlaces junto con el porcentaje de paquetes perdidos o si hay algun enlace caído
 ![untitled](/assets/img/fortigate/forti74.png)
+
+## SD-WAN Rules
+
+
