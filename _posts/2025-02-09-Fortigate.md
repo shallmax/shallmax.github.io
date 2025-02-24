@@ -476,4 +476,76 @@ y con esto verificamos la estabilidad de los enlaces junto con el porcentaje de 
 
 ## SD-WAN Rules
 
+SD WAN Rules, es muy parecido a Policy Route que lo utilizamos donde para un cierto origen que quería navegar hacia un destino podemos definir por qué enlace saldrá. En este caso SD WAN Rules tiene mas criterios para poder elegir por cual enlaces salir al destino especificado. Para crear la regla se tiene que ir a “Network” y luego “SD-WAN” y ahí abrir la pestaña “SD-WAN Rules” para luego en “Create New” ingresar los parámetros necesarios donde en “Name” ingresamos el nombre de la política, “Source Address” podemos definir una dirección IP o un grupo de usuarios (“Source address” y “user group” respectivamente), en el apartado de destination tenemos 3 opciones “address” que tenemos que ingresar la dirección de destino, “Internet Service” que podríamos ingresar algún servicio y por ultimo “Aplication” que es un software que queramos enrutar que en este caso la Suite de Google (G Suite) Esto significa que cuando nuestro Active Directori quiera navegar a través de la Suit de Google hará match con esta regla y hará lo que le configuremos en la sección de Outgoing Interfaces que puede ser lo siguiente; en la sección “Manual” significa que el trafico siempre se hará cuando se cumpla esta regla por la interfaz que pondremos en “Interface preference” (ISP2 por ejemplo) junto con “Zone preference” (SDWAN-LAB que tenemos creado). Ya con esta política creada siempre que el active direcotory navegue a través de Outlook.web.app se hará por el ISP2. En la siguiente foto sale que quedó marcado el ISP2
+![untitled](/assets/img/fortigate/forti75.png)
 
+Con la siguiente imagen se ve donde se encuentra el Tilde que es la interfaz seleccionada para esa regla que sacará cierto tipo de trafico por esa interfaz seleccionada
+![untitled](/assets/img/fortigate/forti76.png)
+
+La siguiente opción de Outgoing Interfaces es “Best Quality” que significa que se seleccionará la interfaz con la mejor performance para el enlace, por lo tanto en “Interface Preference” tenemos que seleccionar por lo menos 2 interfaces para que pueda elegir por cual salir. En “Measured SLA” que es donde estará haciendo las pruebas de los parámetros del enlace. En “Quality criteria” seleccionamos el parámetro que queremos medir ya sea Latency, Jytter, Bandwich, entre otros. Y ya con esto, el enlace con mejores mediciones será el seleccionado para la política creada
+![untitled](/assets/img/fortigate/forti77.png)
+
+En la sección de “Performance SLAs” se pueden ver los parámetros en tiempo real de los enlaces donde aparece que el Port2 tiene menos latencia que el Port3 por lo tanto Port2 es el seleccionado automaticamente
+![untitled](/assets/img/fortigate/forti78.png)
+
+La tercera opción en Outgoing Interfaces es “Lowest Cost SLA” y SLA significa que saca los criterios de la pestaña “Performance SLAs” donde al activar una vez dentro de la performance creada (Default_AWS) la pestaña que dice SLA Target se mostraran 3 valores para editar, que son el Latency threshold (umbral de latencia), Jitter threshold y Packet Loss threshold (umbral de paquetes perdidos) y estos parámetros serán de forma que genere un aviso en los parámetros que mostrará de color rojo de los enlaces si está bajo los criterios indicados y así utilizará el enlace que se encuentre por encima de los criterios indicados. Y con esto el enlace que se utilice será el de menor costo si ambos enlaces tienen su SLA en parámetros buenos y si también tienen el mismo costo verá cual tiene menor prioridad y si tienen la misma prioridad se utilizará el enlace que se encuentre primero en el apartado de “Interface preference” dentro de las “SD Wan Rules”. Y así seleccionará 1 de los enlaces indicados ya que lowest cost no hace balanceo de carga.
+![untitled](/assets/img/fortigate/forti79.png)
+
+En la imagen se aprecia que el ISP1 sobrepasó el umbral de 120 de latencia por lo tanto marca en rojo como alerta y seleccionó para el trafico de la regla el ISP2
+![untitled](/assets/img/fortigate/forti80.png)
+
+La ultima opción que nos tiene “Outgoing Interfaces” es “Maximize Bandwidth SLA” y este a diferencia de “Lowest Cost SLA” si hace balanceo de carga siempre y cuando los enlaces estén por encima de los criterios indicados en “SLA Target” sin importarle cual tiene menor costo o prioridad
+![untitled](/assets/img/fortigate/forti81.png)
+
+## Virtual Domains (VDOMs)
+
+Es una funcionalidad de Fortigate que nos permite dividir un equipo físico en múltiples fortigate virtuales y a cada uno se le puede asignar su propia red virtual con su respectiva interfaz asociada, con su propio set de políticas, tablas de enrutamiento, direccionamiento, objetos, etc. con la idea de que el trafico que pase por el VDOMs1 no pueda ser visto por el VDOMs2 o VDOMs3 haciendo el equivalente a tener 3 fortigate independiente en un mismo equipo físico. Por defecto fortigate soporta hasta 10 VDOMs a excepción de los modelos de alta gama.
+
+En las empresas se pueden ocupar VDOMs cuando se quiere un total aislamiento en sectores críticos o específicos por ejemplo separar el área contable del área de producción.
+
+### Idependent VDOMs
+
+No es una forma muy practica debido a que se necesita una interfaz física por cada VDOM que creemos para que pueda salir a internet, lo que la hace bastante limitada.
+
+### Routing Through a Single VDOM
+
+Es una evolución al anterior modelo agregando un VDOM “To_Internet” que tiene como finalidad que este sea el que está conectado a internet independiente si tenemos 1 o mas ISPs todos saldrán a través de este VDOM y atras de este VDOM tendremos conectados todos los VDOMs de la empresa mediante los Inter-VDOM links pero aun con esto no tenemos conexion entre los VDOMs
+
+### Meshed VDOMs
+
+Este modelo todos los VDOMs se conectan con todos mediante los Inter-VDOM link.
+
+## Habilitar VDOMs
+
+desde la Interfaz grafica se realiza en "System" y luego "Settings" y acá se encuentra una opcion para habilitar el "Multi-VDOM Mode".
+desde CLI es;
+- `config system global;`
+- `set vdom-mode multi-vdom;`
+- `end;`
+- `y;`
+
+## Creacion de VDOMs para Single VDOM
+
+en "System" en la opcion "VDOM" click en "+Create New" y en "Virtual Domain" crearemos el de internet con el nombre "INTERNET" y tambien el VDOM "LEGALES" y "CONTABLE". El "Management VDOM" siempre tiene que ser el que salga a internet debido a que este se encarga de actualizar el fortigate con las firmas o virus nuevos, actualizaciones de Software, base de datos, etc. y para asignar el Management VDOM se selecciona el VDOM que en este caso es "INTERNET" y se hace click en "Switch Management" y ya con esto seleccionamos el VDOM INTERNET como Management y queda con un puntito en rojo para que sobresalga indicando que ese es el Management
+
+## Asignacion de interfaces 
+
+Desde la seccion de configuracion global (arriba donde aparecen todos los VDOMs) vamos a "Network", "Interfaces" y tenemos que retirar las interfaces que utilizaremos de la seccion "Hardware Switch" para que se encuentren habilitadas para los VDOMs creados. Para asignar la interfaz al VDOM INTERNET se abre el puerto que queremos asignar a "INTERNET" y en "Virtual domain" se le asigna la VDOM correspondiente (INTERNET) y así con la interfaz de LEGALES y  CONTABLE. Ahora si nos cambiamos a los diferentes VDOMs veremos el VDOM INTERNET, LEGALES y CONTABLE con sus respectivas interfaces y direccionamiento IP configurado. 
+
+## Vincular VDOMs mediante inter-VDOM links
+
+Se crean desde global "Network" "Interfaces" al pinchar "Create New" tenemos la opcion de "VDOM Link" y en nombre le pondremos "L - int" (de legales a internet debido a que tiene un limite maximo de caracteres por defecto) y en "Virtual Domain" de la "Interface 0" seleccionamos LEGALES con el direccionamiento "IP/Netmask" por ejemplo 10.10.10.1/30 (solo 2 ip con esa mascara) y habilitamos el PING. En "Virtual Domain" de la "Interface 1" asignamos INTERNET y la "IP/Netmask" 10.10.10.2/30 y tambien habilitamos el PING. y con esto se crea el VDOM Link y tenemos que hacer lo mismo con CONTABLE
+
+## Crear ruta para salida a internet
+
+En el VDOM LEGALES vamos a "Network" y "Static Routes" y en "Destination" la ip 0.0.0.0/0.0.0.0 debido a que es para salida a internet, en "Gateway Address" 10.10.10.2 que es el extremo del VDOM Link y en "Interface" tiene que detectar el VDOM Link creado (L - int0) y ahora tenemos que crear la policy para que los hosts detras de LEGALES puedan navegar a internet. Vamos a "Policy & Objects" y "Firewall Pollicy" y "Create New" con el nombre de INTERNET LEGALES, en "Incoming Interface" asignamos el "internal1" y en "outgoing Interface" asignamos "L - int"  y todo lo demas igual que siempre salvo en que en esta politica aunque sea para salir a internet no habilitamos el NAT ya que el VDOM de legales no es el de salida a internet. Por ultimo necesitamos la configuracion del VDOM de INTERNET para que conozca la red de LEGALES en "Static Routes" creamos con la IP 172.17.0.0/24 (direccion de red de LEGALES) el "Gateway Address" 10.10.10.1 y en "Interface" tiene que detectarse el L - int1 y por ultimo creamos la policy para la salida a internet desde el VDOM de INTERNET la creamos con nombre INTERNET, "Incomming Interface" L - int1, "Outgoing Interface" wan2 y acá si va el NAT habilitado ya que este es el VDOM de cara a internet y con esto ya tiene que tener internet los hosts de la red LEGALES
+
+## Creacion de VDOMs para Meshed VDOM
+
+con lo ya configurado tendremos que crear un ultimo VDOM link entre el vdom de LEGALES y CONTABLE junto con la creacion de unas rutas y nuevas politicas para la comunicaciones entre las 2 redes. 
+Crearemos el VDOM Link faltante desde la seccion de GLOBAL "Network" "Interfaces" "Create New" "VDOM Link" y en "Name" lo llamaremos L - C (de legales a contable) en "Virtual Domain" de la "interface 0" seleccionamos LEGALES, en "IP/Netmask" 10.30.0.1/30 Habilitamos el PING y en "Interface 1" en "Virtual Domain" seleccionamos CONTABLE con "IP/Netmask" 10.30.0.2/30 y habilitamos el PING y con esto ya tenemos el vinculo entre los VDOMs. Ahora queda configurar en LEGALES crear una una ruta para que aprenda como enrutar hacia CONTABLE y para eso nos vamos en la seccion LEGALES "Interfaces" "Static Routes" "Create New" y en "Destination Subnet" detallamos la 10.0.1.0/24 y en "Gateway Address" la IP del extremo VDOM Link 10.30.0.2 y con eso "Interface" tiene que detectar L - C0 automaticamente y debemos crear la misma ruta en el VDOM de CONTABLE con la nueva "Static Route" 172.17.0.0/24 con el "Gateway Address" 10.30.0.1 con el "Interface" automatico de L - C1. Ahora que ya estamos en CONTABLE crearemos la politica de ida hacia el sector de LEGALES con el nombre de To_Legales, el Incomming Interface es Internal2, el Outgoing Interface es VDOM Link "L - C1" y sin NAT obviamente. Al crearla tomamos esa politica y le creamos la reversa para el trafico de vuelta con el boton derecho "Clone Reverse" con el nombre de From_Legales y por ultimo la habilitamos. Y ahora hacemos lo mismo en el VDOM de LEGALES con el nombre To_Contable, Incoming Internal1, Outgoing L - C0 y sin NAT, realizamos la reversa tambien y la habilitamos y ya con esto la red LEGALES y CONTABLE deberia alcanzarse 
+
+## Gestion de Usuarios administradores en VDOM
+
+Por defecto el unico usuario que tiene permisos para hacer configuraciones en todos los VDOMs, tomar backup y restaurarlos es el usuario admin o algun otro usuario que tenga el perfil de super admin. Tambien es posible crear usuario y asignarle directamente la administracion de un VDOM o varios VDOMs pero no podran acceder a las configuraciones globales ya que eso solo lo puede hacer el usuario admin o algun otro usuario que tenga el perfil de super admin.
+Desde la seccion de Global en "System", "Administrators" y en "Create New" creamos un nuevo usuario por ejemplo Contable en Type "Local User" en "Administrator Profile" se puede seleccionar si es prof_admin o super_admin y en "Virtual Domains" podemos seleccionar el VDOM que queramos que administre (vdom contable) y para que este usuario pueda entrar tiene que hacerlo desde la red de CONTABLE
