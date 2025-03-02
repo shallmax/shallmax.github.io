@@ -548,4 +548,191 @@ Crearemos el VDOM Link faltante desde la seccion de GLOBAL "Network" "Interfaces
 ## Gestion de Usuarios administradores en VDOM
 
 Por defecto el unico usuario que tiene permisos para hacer configuraciones en todos los VDOMs, tomar backup y restaurarlos es el usuario admin o algun otro usuario que tenga el perfil de super admin. Tambien es posible crear usuario y asignarle directamente la administracion de un VDOM o varios VDOMs pero no podran acceder a las configuraciones globales ya que eso solo lo puede hacer el usuario admin o algun otro usuario que tenga el perfil de super admin.
-Desde la seccion de Global en "System", "Administrators" y en "Create New" creamos un nuevo usuario por ejemplo Contable en Type "Local User" en "Administrator Profile" se puede seleccionar si es prof_admin o super_admin y en "Virtual Domains" podemos seleccionar el VDOM que queramos que administre (vdom contable) y para que este usuario pueda entrar tiene que hacerlo desde la red de CONTABLE
+Desde la seccion de Global en "System", "Administrators" y en "Create New" creamos un nuevo usuario por ejemplo Contable en Type "Local User" en "Administrator Profile" se puede seleccionar si es prof_admin o super_admin y en "Virtual Domains" podemos seleccionar el VDOM que queramos que administre (vdom contable) y para que este usuario pueda entrar tiene que hacerlo desde la red de CONTABLE.
+
+## VLANs en equipos fortigate
+
+Con las VLANs podemos subdividir una o mas interfaces fisicas en distintas interfaces o redes logicas, haciendo completamente independiente una de otra teniendo su propio dominio de broadcast. Con esto tambien podemos hacer un mejor aprovechamiento de un equipo que tiene pocas interfaces. Esto se lleva a cabo mediante la inserción de los vlantags en los frame de Ethernet (capa 2). Los equipos de capa 2 (switch) tiene la capacidad de agregar o remover los tags de sus propias vlans mientras que los equipos de capa 3 (routers y firewalls) puede sobreescribir estos tag para poder enrutar el trafico a la vlan correspondiente. Se presenta la siguiente topologia;
+![untitled](/assets/img/fortigate/forti82.png)
+
+### creacion de vlans
+
+nos vamos a "Network", luego a "Interfaces" y en "Create New" seleccionamos "Interface" y aca creamos una vlan donde en "VLAN ID" tenemos que ingresar el TAG de la VLAN (numero de vlan) entre otros datos segun la imagen;
+![untitled](/assets/img/fortigate/forti83.png)
+
+creamos la segunda vlan (Contable)
+![untitled](/assets/img/fortigate/forti84.png)
+
+y por ultimo la vlan de Sistemas en el puerto 3
+![untitled](/assets/img/fortigate/forti85.png)
+
+y ahora podemos ver las vlans creadas tanto en el puerto 2 como en el puerto 3
+![untitled](/assets/img/fortigate/forti86.png)
+
+### Creacion de politicas para las vlans
+
+Para que se puedan comunicar entre las vlans hace falta la politica correspondiente y esto se hace en "Policy & Objetcts", "Firewall Policy" y "Create New" y la configuramos sin NAT 
+![untitled](/assets/img/fortigate/forti87.png)
+
+y ahora ya creada le hacemos un "Clone Reverse" para el trafico de vuelta para así tener comunicacion entre las vlans configuradas. Acemos esto para cada una de las vlans tanto con el trafico de ida como con el trafico de vuelta
+![untitled](/assets/img/fortigate/forti88.png)
+
+## Virtual Switchs en equipos fortigate
+
+Es cuando hacemos que el equipo fortigate trabaje como un switch mediante Software Switch y así al momento de conectarle en sus interfaces los hosts se puedan comunicar entre ellos directamente y para configurarlo tenemos que ir a "Network", "Interfaces" y "Create New" y seleccionamos "Interface" y lo importante en la seccion de "Type" seleccionar "Software Switch" y ahora seleccionamos las interfaces que estarán como Switch y para nuestro caso crearemos una red y habilitaremos el "DHCP Server" con los rangos por defecto para que el fortigate nos dé un rango de IP
+![untitled](/assets/img/fortigate/forti89.png)
+
+una vez creado se muestra en "Interfaces" el apartado de Software Switch donde muestra el tipo que es, los puertos, la ip de la red, los permisos (en este caso solo PING), el rango de DHCP Server configurado. Ya con esto al momento de conectar los equipos a esos puertos estaran configurados por DHCP y tendran comunicacion como si fuera un switch
+![untitled](/assets/img/fortigate/forti90.png)
+
+## Fortigate modo transparente
+
+Hasta ahora siempre se a utilizado el fortigate en modo NAT que significa que el equipo enruta el trafico de acuerdo a la capa 3 del modelo OSI, con esto actúa como un router teniendo IP en cada interfaz a excepción de cuando creamos un Software-Switch. En el modo transparente o modo Bridge el equipo reenvía los paquetes de acuerdo a la capa 2 del modelo OSI (MAC Address) lo que hace que el equipo no tenga direcciones IP en sus interfaces ya que actúa como un Switch. La gran ventaja de este modo es que no requiere ningún cambio ni configuración adicional en la red ya existente.
+
+Para pasar de un equipo en modo NAT a uno Transparente se realiza de la siguiente manera;
+- `Config system interface;`
+- `Edit port1;` editar el acceso del puerto conectado
+- `Append allowaccess http;` para tener acceso mediante GUI
+- `End;` para guardar
+- `Config system settings;` para entrar en el contexto de cambiar de NAT a BRIGE
+- `Set opmode transparent;` o NAT si así se requiere
+- `End;`
+
+### Error al pasar a modo Brige
+
+Puede dar un error debido a que no se puede tener switches administrados o switch con vlans en el equipo por lo tanto tenemos que borrar esas configuraciones. En el caso de nosotros no tenemos eso pero sí tenemos una interfaz configurada con fortilink por lo tanto tenemos que deshabilitarla
+![untitled](/assets/img/fortigate/forti91.png)
+
+- `Config system interface;` para entrar en el contexto
+- `Show;` para ver cual interfaz está con fortilink
+![untitled](/assets/img/fortigate/forti92.png)
+
+Se podría eliminar esa configuración con el comando “delete fortilink” pero no lo permite debido a que esa interfaz está en uso por lo tanto una opción sencilla es ir a la interfaz grafica y abrir "Network", "Interfaces" hacer click en el numero de la columna de "Ref" donde aparecen todos los servicios referenciados a fortilink y eliminarlos
+![untitled](/assets/img/fortigate/forti93.png)
+
+pero lo haremos mediante la CLI;
+
+- `Show | grep -fi fortilink;` la flag -f es para que muestre el contexto en donde encontró la cadena y la -i para que ignore mayúsculas y minúsculas
+
+Nos muestra 4 entradas
+![untitled](/assets/img/fortigate/forti94.png)
+
+la primera es la que tenemos que eliminar y las otras 2 (NTP y DHCP) tenemos que deshabilitar y la ultima es solo una descripcion que encontró el comando grep por lo tanto la ignoramos. Para que deje eliminar la primera se hace de la siguiente manera;
+
+- `Config system ntp;`
+- `Show;` para ver lo que tenemos que deshabilitar
+- `Set ntpsyn disable;` para desactivar
+- `Set server-mode disable;` para desactivar
+- `Show;` para confirmar que esté desactivado
+- `End;` para guardar
+- `Config system dhcp servier;` para entrar en ese contexto
+- `Show;` para ver lo configurado
+- `Delete 1;` para eliminar la entrada
+- `End;`
+- `Config system interface;`
+- `Delete fortilink;` para eliminar el fortilink y ahora deja ponerlo en modo transparente
+- `End;`
+- `Get system interface;` para ver la ip que nos dio el DHCP y así poder dejar esa ip de administración
+- `Config system settings;`
+- `Set opmode transparent;` para dejarlo en modo bridge
+- `Set manageip 192.168.1.60/24;` podriamos poner la que nos dio el DHCP o poner alguna otra del rango para así dejar esta ip de administración del equipo
+- `Set Gateway 192.168.1.1/24;` para que pueda salir a internet y así actualizarse
+- `End;` para guardar
+
+Se puede verificar con
+
+- `Get system status;` y en operation mode; indica “Transparent”
+
+Y ahora utilizando la ip de administración vamos al navegador y accedemos al fortigate, conectamos a los puertos del fortigate el router y el host y creamos la política para que el host pueda salir a internet
+![untitled](/assets/img/fortigate/forti95.png)
+
+## Alta Disponibilidad (HA)
+
+Mediante la alta disponibilidad se puede configurar un cluster de equipos fortigate (entre 2 a 4 equipos). La ventaja es que si uno falla los otros equipos tomarán su lugar automáticamente sin que los usuarios lo noten.
+
+Existen 2 modalidades de alta disponibilidad, la primera es “Activo Pasivo” donde tendremos un equipo designado como primario y los otros equipos serán secundarios y solo el primario procesará datos y los otros están en stand by a la espera de que el primario falle. En este modo el primario envia su configuración y mantiene en sincronia a los demás fortigates de tal manera que si agregamos alguna policy, ruta o un objeto esto se ve reflejado en los equipos secundarios.
+
+El otro modo “Activo Activo” hace que todos los equipos del clauster procesan trafico sin embargo el equipo primario es el que balancea la carga con los demás fortigates. En caso de que el primario falle un equipo secundario pasa a ser primario
+
+### Requerimientos para un HA
+
+- Tener entre 2 a 4 equipos del mismo modelo de fortigate con un licenciamiento ideal del mismo tipo
+- Definir un link de comunicación entre los fortigate llamada heartbeat y que idealmente sean 2 conexiones para tener una de respaldo y este permite la comunicación entre los distintos equipos del clouster para la distribución de trafico
+- Se necesita configurar las mismas interfaces en todos los equipos del clauster
+
+Haremos la configuración en el primario para que lo replique en el secundario;
+
+- `Config system interface;`
+- `Edit port2;` para salir a internet
+- `Set ip 45.32.12.1/30;`
+
+Configuramos la ip del las interfas de managment de ambos equipos donde se encuentran conectados los fortigate (que se recomiendan 2 interfaces) siempre tiene que estar en static y nunca por DHCP por lo tanto la configuramos de la siguiente manera
+
+- `Config system interface;`
+- `Edit port1;` donde esta conectado el otro fortigate
+- `Set mode static;` para dejarla estática
+- `Set ip 192.168.1.21/24;` tiene que ser una ip disponible en la red
+- `Append allowaccess http;` para poder entrar mediante GUI y administrarlo
+- `End;`
+- `Config system global;` para entrar en el contexto y cambiar el nombre
+- `Set hostname HA-2;` para dejarlo con ese nombre
+- `End;`
+
+Hacemos lo mismo en el fortigate principal y también la IP Static correspondiente
+- `config system interface;`
+- `edit port1;`
+- `set mode static;`
+- `set ip 192.168.1.20/24;`
+- `append allowaccess http;`
+- `end;`
+- `config system global;`
+- `set hostname HA-1;`
+- `end;`
+
+### configuración HA Activo Pasivo
+
+En la GUI vamos a System, luego HA y acá en el apartado de “Mode” que se encuentra en “Standalone” seleccionamos Active-Passive. El campo de “Device priority” hace que la prioridad mas alta será el principal. Se tiene que poner un nombre al clouster en el campos de “Group name” junto con la contraseña y este tiene que ser igual en todos los fortigate del clauster. “Session pickup” se refiere a que si está activado el fortigate principal guardará las sesiones de los usuarios en todos los fortigates del claster para que en caso de caída los otros equipos ya tengan las sesiones y el usuario no tenga que volver a conectarse a sus programas. “Monitor interfaces” es un elemento muy importante ya que si no está activo y en caso de desconexion del cable con la LAN como el fortigate seguirá encendido no se tomará como caido y no tomaría eso como un evento de alta disponibilidad, en cambio si se agrega el puerto de la LAN en “Monitor interfaces” en caso de desconexion del cable levantará la alerta de evento de alta disponibilidad y podrá realizar el cambio de equipo automáticamente haciendo que el otro equipo sea prioritario y así tomar el control. “Heartbeat interfaces” son las interfaces que se utiliza para que los fortigate se comuniquen entre sí por lo tanto tenemos que seleccionar la interfaz o las interfaces que están directamente conectadas entre los fortigate. “Management Interface Reservation” se tiene que detallar la interfaz que sea de administración para que no sean sincronizadas y en “Destination subnet” se ingresa la red correspondiente. Ya con esto tenemos el primer equipo del clauster configurado. En el otro equipo tenemos que hacer exactamente lo mismo y una vez esperar unos minutos para que el primario le envíe toda la configuración al equipo secundario.
+![untitled](/assets/img/fortigate/forti96.png)
+
+![untitled](/assets/img/fortigate/forti97.png)
+
+### primary Fortigate Election: Override Disabled
+
+En caso de apagar el equipo primario pasará al secundario y cuando vuelva a encender el primario este quedara como secundario debido a que fortigate sigue el siguiente orden de selleccion; el equipo con mas puertos monitorizados será el prioridad, en caso de coincidir la misma cantidad de puertos conectados evalua el HA Uptime que es el tiempo de pertenencia de ese equipo al claster y es por esta razón que queda el otro equipo como prioritario debido a que tiene mas minutos en el claster que el otro que reiniciamos, de tener el mismo tiempo en el clauster verificará el “Priority” y el que tenga mayor numero será el primario y si en caso de que todo esto sea igual entre los equipos se selecciona con el numero de serie mas alto de cada equipo.
+
+
+### primary Fortigate Election: Override Enable
+
+Es un modelo que a diferencia del que viene por defecto (Override Disable) con este podemos dejar siempre un equipo como primario una vez que este vuelva a estar disponible y esto se hace debido a que primero al igual que el otro modo mira las interfaces conectadas (el que tenga mayor numero de interfaz es el prioridad) pero como segundo factor toma en cuenta la “Priority” y así al darle mayor prioridad al primario este apenas vuelva a estar disponible será utilizado como primario. El tercer paso que toma es el HA uptime que mira cual tiene mayor tiempo en el claster (a diferencia del disable este está en tercer lugar y el priority está en segundo lugar).
+
+Para programar esta opción se tiene que hacer en todos los equipos ya que no se actualiza;
+- `Config system ha;`
+- `Set override enable;`
+- `End;`
+
+### HA Activo Activo
+
+Para poder pasar de Activo Pasivo a Activo Activo como ya tenemos toda la configuración de interfaces e IP solo se modifica en “System”, luego “HA”, en “Mode” seleccionamos “Active-Active” haciendo lo mismo en todos los equipos y con esto ya queda en el modo para realizar balanceo de carga con los equipos del claster. Los fortigate cuentan con MAC virtuales por lo tanto cuando el principal se cae los otros ya tienen la MAC virtual por lo tanto los hosts nunca se enteran cuantos equipos hay en el clauster. También podemos hacer HA  con claster con VDOMs. Una cosa importante es que para actualizar los equipos solo basta con subir la imagen de actualización al equipo primario y este primero actulizará todos los equipos del claster y una vez que todos los secundarios estén actualizados el primario se pasa como secundario y ahí recién se actualiza para luego volver como primario
+
+### HA Comandos utiles en la CLI
+
+- `diagnose sys ha status;` muestra informacion importante como los serial numbers de los equipos del claster (FGVMEVVEZLHQHNC4 - FGVMEVORDBOYDBD6), junto con quien es el primario y el secundario, tambien la prioridad de cada uno (130 y 128), los hostname, y la prioridad de los serial numbers. Otra informacion importante es la direccion IP de la interfaz de heartbeat que se encuentra en "primary_ip" (169.254.0.1) y esta es asignada de forma automatica dependiendo de quien tenga el serial number mas alto recibe la direccion IP mas baja.
+![untitled](/assets/img/fortigate/forti98.png)
+
+- `diagnose sys ha checksum cluster;` con este comando se ve el checksum (calculo) que hace el equipo para verificar si se encuentran sincronizados teniendo ambos calculos el mismo resultado
+![untitled](/assets/img/fortigate/forti99.png)
+
+- `execute ha manage 1 admin;` para conectarme desde la CLI del equipo primario al equipo secundario, una vez ingresado ese comando pide la contraseña del equipo secundario y asi configurar lo que se necesite 
+![untitled](/assets/img/fortigate/forti100.png)
+
+- `execute ha failover set 1;` sirve para testear el failover de un claster para así no estar apagando el equipo y con este comando pasa al siguiente equipo como primario.
+execute ha failover status; sirve para ver si el test del failover está habilitado y si muestra "set" significa que está habilitado
+![untitled](/assets/img/fortigate/forti101.png)
+
+- `get system ha status;` en la seleccion de "Primary selected using:" nos muestra el motivo por el cual un equipo se encuentra como primario y en este caso muestra que el equipo con la serial number "FGVMEVORDBOYDBD6"  fue seleccionado como primario debido a que se ejecutó "EXE_FAIL_OVER flag" el equipo con la serial number "FGVMEVVEZLHQHNC4". Tambien muestra el "Configuration Status" que indica que los equipos se encuentran en sincronia. Tambien los recursos del sistema utilizados por cada equipo como memoria, CPU, sistema. Tambien muestra los index del claster que son los numeros de cada equipo
+![untitled](/assets/img/fortigate/forti102.png)
+
+- `execute ha failover unset 1;` sirve para deshacer el test failover
+
+## IPsec
+
