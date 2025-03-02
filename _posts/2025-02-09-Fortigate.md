@@ -605,6 +605,7 @@ Puede dar un error debido a que no se puede tener switches administrados o switc
 
 - `Config system interface;` para entrar en el contexto
 - `Show;` para ver cual interfaz está con fortilink
+
 ![untitled](/assets/img/fortigate/forti92.png)
 
 Se podría eliminar esa configuración con el comando “delete fortilink” pero no lo permite debido a que esa interfaz está en uso por lo tanto una opción sencilla es ir a la interfaz grafica y abrir "Network", "Interfaces" hacer click en el numero de la columna de "Ref" donde aparecen todos los servicios referenciados a fortilink y eliminarlos
