@@ -770,7 +770,7 @@ Para esto se tiene que configurar la segunda VPN con la dirección IP del ISP-2 
 
 ### Cambio de nombre a una VPN
 
-Para cambiar el nombre a una VPN se podría realizar mediante la CLI con el comando “show | grep -f nombredelavp” para que nos muestre todas las coincidencias del nombre de la VPN con el contexto gracias a la flag “-f”. Luego copiamos toda la salida del comando y pegarla en algún editor de texto para poder modificar ciertos parámetros por ejemplo quitar todas las fechas que muestra, también quitar las configuraciones que no hagan referencia a la VPN que queramos cambiarle el nombre y así una vez ya limpiado el archivo procedemos a cambiar el nombre de la VPN directamente desde el bloc de notas en todas las referencias que aparezca (con la combinación CTRL+f reemplaza más fácil). Luego de realizar los cambios en el archivo tenemos que borrar las políticas correspondientes a esa VPN tanto de IDA como de VUELTA, después se borran las rutas estáticas de la VPN y por ultimo la VPN. El siguiente paso es copiar el bloc de notas completo para pegarlo en la CLI y ya con esto debería estar la VPN con el nuevo nombre y disponible con todo configurado nuevamente. Otra forma de hacerlo es tomar un backup del archivo de configuración del fortigate para abrir el archivo y con CTRL+f buscar el nombre de la VPN y realizar los cambios para luego volver a restaurar el archivo de configuración con los cambios realizados
+Para cambiar el nombre a una VPN se podría realizar mediante la CLI con el comando “show \| grep -f nombredelavp” para que nos muestre todas las coincidencias del nombre de la VPN con el contexto gracias a la flag “-f”. Luego copiamos toda la salida del comando y pegarla en algún editor de texto para poder modificar ciertos parámetros por ejemplo quitar todas las fechas que muestra, también quitar las configuraciones que no hagan referencia a la VPN que queramos cambiarle el nombre y así una vez ya limpiado el archivo procedemos a cambiar el nombre de la VPN directamente desde el bloc de notas en todas las referencias que aparezca (con la combinación CTRL+f reemplaza más fácil). Luego de realizar los cambios en el archivo tenemos que borrar las políticas correspondientes a esa VPN tanto de IDA como de VUELTA, después se borran las rutas estáticas de la VPN y por ultimo la VPN. El siguiente paso es copiar el bloc de notas completo para pegarlo en la CLI y ya con esto debería estar la VPN con el nuevo nombre y disponible con todo configurado nuevamente. Otra forma de hacerlo es tomar un backup del archivo de configuración del fortigate para abrir el archivo y con CTRL+f buscar el nombre de la VPN y realizar los cambios para luego volver a restaurar el archivo de configuración con los cambios realizados
 
 ### Creacion de Zone para minimizar policys
 
@@ -994,7 +994,7 @@ En el menu de "System", "Firmware", en la primera parte nos indica que version t
 Para auditar todos los comandos o acciones que se ejecutan desde la CLI se realiza con el siguiente comando
 - `config system global;`
 - `get | grep cli;` para buscar esta funcion y ver si está enable o disable
-- `set cli-audit-log enable; para habilitar la funcion
+- `set cli-audit-log enable;` para habilitar la funcion
 - `end;` 
 
 para ver el log de la CLI tenemos que ir a "Log & Report", "Events", "System Events" y veremos todos los comandos ingresados
