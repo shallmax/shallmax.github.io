@@ -737,3 +737,268 @@ execute ha failover status; sirve para ver si el test del failover está habilit
 
 ## IPsec
 
+Para crear nuestro primer tunel se tiene que ir a "VPN" y luego a "IPsec Tunnels" y en "Create New" seleccionar "IPsec Tunnel", una vez adentro seleccionar el "Template type" "Custom" y le asignamos un nombre que en este caso será "v.SITEb" (la "v" de vpn y "SITEb" porque es para conectarse al B) y luego en "Next". En la fase 1 se encuentra los siguientes parametros para configurar; "Remote Gateway" es la direccion IP publica del otro extremo y podemos seleccionar entre "Static IP Address", "dynamic DNS" (en caso de tener el DNS en lugar de la IP) y "Dialup User" donde nuestro fortigate funcionaria como un servidor de VPN y otros equipos o usuarios se conectarian hacia nostros. De momento solo trabajaremos con "Static IP Address", en "IP Address" ponemos la ip publica del otro extremo que en este caso será la 60.89.123.1, en "Interface" tenemos que indicar por cual interfaz se alcanza esa IP, "Local Gateway" se utiliza cuando tenemos mas de 1 IP publica configurada en nuestro ISP1 y queremos especificar por cual salir acá se agrega y detallamos si queremos salir por la primaria, secundaria o especifica. "Mode Config" solo sirve cuando se trabaja con Dialup User. "NAT Traversal" solo se tiene que habilitar cuando el firewall está detras de un NAT en caso de que reciba la IP publica directamente no se utiliza y la opcion es "Enable" que es cuando dejamos que el firewall detecte si se encuentra detras de un NAT, "Disable" para desactivarlo explicitamente y "Forced" es encendido. "Dead Peer Detection" es para detectar si el tunel se encuentra caido y lo hace enviando paquetes y si no se recibe respuesta con la cantidad indicada en "DPD retry count" cada los segundos indicados en "DPD retri interval" se dará como caido el tunel, y la opcion que tenemos es "Disable" (no se recomienda), "on Idle" significa que enviará esos paquetes cada vez que no haya trafico en el tunel ni de ida ni de vuelta (no es un modo muy recomendado cuando tenemos muchos tuneles debido a que carga las lineas con trafico), el "On Demand" solo hace funcionar el Dead peer Detection cuando dejamos de recibir paquetes. "Forward Error Correction" sirve para reducir la retransmisión de paquetes TCP si fallan pero solo funciona cuando apagamos el IPSEC hardware off load que viene con algunos equipos. Luego viene la "Authentication" y en "Method" seleccionamos el metodo y el metodo mas comun es "Pre-shared Key" y luego ingresamos una clave en "Pre-shared Key". Luego en la version de "IKE" tenemos el tipo 1 o tipo 2 y en tipo 1 tenemos el mode "aggressive" que se selecciona este modo cuando tenemos que especificar el local ID de quien se conectará pero este metodo es menos seguro que la opcion "Main (ID protection)". Luego en "Encryption" es la opcion donde seleccionamos el algoritmo que utilizará para encriptar los datos y en "Authentication" seleccionamos el algoritmo que utilizará para controlar la integridad de los datos (siempre es recomendable utilizar los mas altos). El "Diffre-Hellman Groups" es un calculo matematico y es recomendable utilizar siempre el valor mas alto para que mas segura sea la conexion. el "Key Lifetime (seconds)" es cada cuantos segundos renegociará el IKE SA (fase 1). El "Local ID" es opcional y se utiliza cuando el otro extremo nos pide ingresar ese dato. "XAUTH" es un modo de autenticacion y tambien es opcional donde podriamos poner un usuario y una contraseña. En la fase 2 generalmente le cambiamos el nombre para identificar que este objeto es de la fase 2 (v2.SITEb) y con esto por la CLI podemos identificar si es de la fase 1 o fase 2. En "Local Address" ingresamos la red local de varias formas pero siempre es recomendable ingresarla a nivel de objetos para así cuando tengamos que cambiar varios tuneles se aplicará en las otras VPNs. En "Remote Address" ingresamos la red de destino que queremos conectarnos. Luego en "Advanced" podriamos ingresar mas de una fase 2. en "Enable Replay Detection" es un mecanismo de proteccion contra ataques del tipo SP replay (es recomendable siempre habilitarlo). En "Enable Perfect Forward Secrecy (PFS)" es opcional pero siempre es recomendable habilitarlo para seleccionar algun numero de "Diffe-Hellman Group". En "Local Port", "Remote Port" y "Protocol" podriamos indicar que puertos y protocolos incluiremos en la conexion cifrada entre las 2 red. "Auto-negotiate" junto con "Autokey keep Alive" hace que siempre mantenga establecido el tunel y en caso de desconectar la fase 2 que intente reconectarla. El "Key Lifetime" es el tiempo que mantiene el tunel en la fase 2. Ya con esto tenemos configurado la primera VPN del SITE-A 
+![untitled](/assets/img/fortigate/forti103.png)
+
+estas VPN siempre tienen que estar espejadas, quiere decir que todo lo que programamos en SITE-A tenemos que hacerlo en SITE-B invirtiendo la red local y la remota
+![untitled](/assets/img/fortigate/forti104.png)
+
+Ahora que ya creamos las VPN tenemos que enrutarlas debido a que las VPN de Fortigate por defecto son en tipo enrutadas, por lo tanto lo que hace fortigate con las VPN es crearles una interfaz y esa interfaz tenemos que enrutarla mediante una ruta estatica hacia el otro destino. Procedemos a la creacion de la ruta en "Network", "Static Routes" y en "Destination" ingresamos la subnet del SITE-B y como no tenemos "Gateway" al momento de seleccionar la interfaz de la VLAN "v.SITEb" el Gateway desaparece. Y luego hacemos lo mismo con el otro equipo.
+![untitled](/assets/img/fortigate/forti105.png)
+
+Una vez creada la VPN y la ruta hacia la VPN, el siguiente paso es la creacion de la Policy correspondiente en "Policy & Objetcts", "Firewall Policy", "Create New". Esta politica será con el trafico de ida llamada LAN - SITEb donde el "Incoming Interface" será la interfaz LAN y el "Outgoing Interface" será la VPN creada y desactivamos la opcion de NAT.
+![untitled](/assets/img/fortigate/forti106.png)
+
+y ahora creamos la politica en reversa con "Clone Reverse" para permitir que el otro extremos de la VPN se conecte hacia nosotros y una vez creadas las politicas en el otro equipo se encontrará habilitada la VPN mostrando el trafico correspondiente
+![untitled](/assets/img/fortigate/forti107.png)
+
+En caso de que en algun momento se quiera desactivar una VPN y debido a que estas son creadas como si fuera un interfaz en la creacion de una ruta estatica desde ahí mismo se pueden desactivar
+![untitled](/assets/img/fortigate/forti108.png)
+
+Para monitorear una VPN se puede ir a "Dashboard", "Network" y al abrir IPsec se puede ver el trafico de ida y vuelta junto con el estado de la fase 1 y fase 2
+![untitled](/assets/img/fortigate/forti108.png)
+
+### Interfaz BlackHole;
+Es muy recomendable cuando se trabaja con IPSEC crear esta intefaz con el proposito de que cuando la VPN se encuentre caida, el equipo no saque la ruta hacia el internet ya que esta ruta es la por defecto y esto hará que cree sesiones y consumir mucho recurso y una vez que la VPN vuelva a estar activa no tomará el trafico hacia esta debido a que ya se creó una sesion con la salida por defecto. En cambio al crear esta interfaz toda conexion será descartada instantaneamente y así cuando vuelva a estar arriba la VPN el usuario podrá acceder a ella sin inconvenientes. Es muy importante ponerle la mayor distancia administrativa posible (254) ya que en caso de haber mas VPN hacia esa ruta esta no se logre meter entre medio de las VPNs. Y hacemos lo mismo en la VPN del otro equipo.
+![untitled](/assets/img/fortigate/forti109.png)
+
+## IPsec - Failover entre 2 tuneles
+
+Failover es dejar una ruta como backup con una distancia administrativa mayor con el fin que cuando la ruta prioritaria (con menor distancia administrativa) se caiga, la siguiente ruta (ISP2) pueda tomar su lugar automáticamente sin afectar la red. Una vez que vuelva a estar disponible la ruta del ISP1 o la VPN configurada por la ruta del ISP-1 esta volverá a ser prioridad.
+
+Para esto se tiene que configurar la segunda VPN con la dirección IP del ISP-2 de ambos SITE junto con la ruta estática (con una mayor distancia) y las políticas correspondientes.
+
+### Cambio de nombre a una VPN
+
+Para cambiar el nombre a una VPN se podría realizar mediante la CLI con el comando “show | grep -f nombredelavp” para que nos muestre todas las coincidencias del nombre de la VPN con el contexto gracias a la flag “-f”. Luego copiamos toda la salida del comando y pegarla en algún editor de texto para poder modificar ciertos parámetros por ejemplo quitar todas las fechas que muestra, también quitar las configuraciones que no hagan referencia a la VPN que queramos cambiarle el nombre y así una vez ya limpiado el archivo procedemos a cambiar el nombre de la VPN directamente desde el bloc de notas en todas las referencias que aparezca (con la combinación CTRL+f reemplaza más fácil). Luego de realizar los cambios en el archivo tenemos que borrar las políticas correspondientes a esa VPN tanto de IDA como de VUELTA, después se borran las rutas estáticas de la VPN y por ultimo la VPN. El siguiente paso es copiar el bloc de notas completo para pegarlo en la CLI y ya con esto debería estar la VPN con el nuevo nombre y disponible con todo configurado nuevamente. Otra forma de hacerlo es tomar un backup del archivo de configuración del fortigate para abrir el archivo y con CTRL+f buscar el nombre de la VPN y realizar los cambios para luego volver a restaurar el archivo de configuración con los cambios realizados
+
+### Creacion de Zone para minimizar policys
+
+para minimizar de la utilizacion de 4 politicas para la conexion del trafico de ida y vuelta de los 2 ISPs crearemos una interfaz del tipo Zone para que con solo esa interfaz abarque las 2 interfaces de VPNs creadas ("v.SITEB-ISP1" y "v.SITEB-ISP2") y con esto se reduce drásticamente el numero de politicas creadas. Primero eliminamos las politicas creadas
+![untitled](/assets/img/fortigate/forti110.png)
+
+Ahora en "Network", "Interfaces", "Create New" seleccionamos "Zone" y en "Name" le pondremos "z.VPN" donde la "z" hace referencia a que es una zona abarcando varias interfaces (las 2 VPNs) y en "Interface members" ingresamos las interfaces de las VPNs creadas
+![untitled](/assets/img/fortigate/forti111.png)
+
+Ahora en el detalle de "Network", "Interfaces" se creó una "Zone" con las interfaces ingresadas
+![untitled](/assets/img/fortigate/forti112.png)
+
+El siguiente paso es crear las politicas con la zona creada de la siguiente manera con la unica diferencia es que en "Outgoing Interface" ingresamos la zona creada y por ultimo realizamos su clone reverse correspondiente
+![untitled](/assets/img/fortigate/forti113.png)
+
+Esto es muy conveniente cuando contamos con muchas VPNs y solo realizamos la política de ida y vuelta de todas las VPNs agrupadas en una zona quedando mas ordenado la lista de politicas
+![untitled](/assets/img/fortigate/forti114.png)
+
+## IPsec - Balanceo ECMP
+
+En el caso anterior vimos como programar el Failover en caso de que una VPN se caiga hacemos que la otra VPN tome el lugar mediante la distancia administrativa de la ruta. Ahora veremos como hacer un balanceo para que la VPN principal viaje por ambos ISP haciendo un balanceo de carga. Esto se hace solo con ingresar la misma distancia administrativa para todas las rutas estaticas configuradas de las VPNs en "Network", "Static Routes" donde en "v.SITEa-ISP1" tiene una distancia administrativa de "10" y "v.SITEa-ISP2" tiene una distancia administrativa de "15" 
+![untitled](/assets/img/fortigate/forti115.png)
+
+y esta ultima la dejaremos en "10" haciendo lo mismo en el otro fortigate y ya con esto comprobamos que ambos tuneles se encuentran balanceando la carga de trafico
+![untitled](/assets/img/fortigate/forti116.png)
+
+## IPsec - Redundancia total entre sitios (IPsec aggregate)
+
+La idea de esta funcion es la redundancia total entre todas las VPNs agregadas en solo 1 interfaz creada y en caso de que alguna se caiga las otras sigan funcionando. Estoy quiere decir que tenemos que conectar una VPN del ISP-1 al ISP1 del site B, otra VPN del ISP-1 al ISP2 del site B, otra del ISP2 al ISP1 del site B y otra del ISP2 al ISP2 del site B (4 VPNs en total para la total redundancia). Para la creacion de esto las VPNs se realizan de la misma forma como lo hemos realizado pero en el primer "Advanced..." se tiene que seleccionar "Aggregate member" como "Enabled" para así luego poder agrupar las VPNs en solo una interfaz 
+![untitled](/assets/img/fortigate/forti117.png)
+
+quedando de esta forma las 4 VPNs y se tiene que hacer lo mismo en el otro equipo. NOTA; tener presente que las distancias administrativas tienen que estar todas iguales en las rutas estaticas
+![untitled](/assets/img/fortigate/forti118.png)
+
+Una vez creada las 4 VPNs de cada fortigate estando en "VPN", "IPsec Tunnels" en "Create New" pinchamos en "IPsec Aggregate", en "Name" le ponemos el nombre a la interfaz, en "Algorithm" tenemos para seleccionar "Weighted Round-Robin" que es basado en peso y es el mas utilizado cuando hay vinculos iguales como en nuestro caso pero si por ejemplo el ISP1 tuviera 100mb y el ISP2 25mb no combiene utilizar la opcion weighted debido a que el ISP2 tiene una velocidad muy baja y en ese caso se recomienda la opcion "Redundant" que significa que cuando se caiga el ISP1 funcionaria el ISP2. La opcion "L3" significa que es basado en IP, "L4" basado en protocolos. Luego en la seccion de "Aggregate Members", "Tunnel" vamos agregando las VPNs creadas y en "Weight" es para agregar peso y entre mas peso tenga mas se utilizará ese tunel VPN.
+![untitled](/assets/img/fortigate/forti119.png)
+
+con esto nos queda una interfaz con el nombre "Siteb-Sitea" compuesta de 4 tuneles VPNs para luego hacer lo mismo en el otro fortigate
+![untitled](/assets/img/fortigate/forti120.png)
+
+Ahora crearemos las rutas estaticas correspondientes seleccionando la "Interface" creada "Sitea-Siteb"
+![untitled](/assets/img/fortigate/forti121.png)
+
+Y por ultimo la creacion de las politicias donde en "Outgoing Interface" ingresamos la interfaz creada y con esto solo tenemos que crear 1 policy y clonar en reversa y no las 8 politicas que tendriamos que haber creado por las 4 VPNs.
+![untitled](/assets/img/fortigate/forti122.png)
+
+En "Dashboard" se aprecian como todas las VPNs están balanceando el trafico dando una redundancia absoluta al estar todas activas y disponibles independiente si se caen 1, 2 o 3 VPNs
+![untitled](/assets/img/fortigate/forti123.png)
+
+## Caso Practico: SDWAN + IPsec
+
+Trabajaremos en SITE-B debido a que en SITE-A ya se encuentra un SD-WAN configurado pero a este la haremos un ajuste en "Network", "SD-WAN" y abrimos el "Perfomance SLAs" seleccionado que es "Default_AWS" y aca en "Participants" seleccionamos "Specify" y agregamos las 2 rutas de los ISPs. En el SITE-B crearemos EL SD-WAN y para esto tenemos que limpiar las referencias de las interfaces del ISP-1 y del ISP-2, ahora creamos la zona en "SD-WAN" donde dice "SD-WAN Zone" dentro de "Create New" 
+![untitled](/assets/img/fortigate/forti124.png)
+
+Ahora crearemos la ruta estatica para la salida a internet por esta SDWAN creada
+![untitled](/assets/img/fortigate/forti125.png)
+
+y por ultimo la politica para salida a internet recondando que esta si va nateada debido a que es a internet
+![untitled](/assets/img/fortigate/forti126.png)
+
+La idea de la creacion de este SDWAN Zone es para ver que podemos configurar tantos SDWAN queramos ya que ahora crearemos otro SDWAN para que utilice los tuneles de IPsec junto con la configuracion para ver la salud de esos IPsec contra el fortigate del otro extremo para que el SDWAN pueda determinar que tunel tiene menor latencia y enviar el trafico por ahí y en caso de que el tunel no utilizado tenga menor latencia este sea conmutado de forma automatica para el trafico de los tuneles haciendolo basado en calidad de servicio, latencia, packet losse o jitter.
+
+
+Una vez creado los 2 tuneles desde el ISP1a al ISP1b y del ISP2a al ISP2b tenemos que crear las interfaces de SDWAN (se hace ahora ya que no puede haber referencias a estos túneles para la creación de SDWAN) y para esto vamos a “Network”, “SD-WAN” y en “Create New” seleccionamos “SD-WAN Zone” y le pondremos de nombre “IPsec”, hacemos click en “Ok” y luego volvemos a entrar para seleccionar en “Interface members” y acá seleccionamos “+Create” y seleccionamos las interfaces de IPsec que acabamos de crear y en “SD-WAN Zone” la asociadmos a la Zone de “IPsec” creada y en “Gateway” no ingresamos nada. Y luego seleccionamos la segunda VPN. Luego de hacer “Ok” la seleccionamos para agregarlas a “Interface members”. Ahora que ya tenemos la SDWAN Zone con interfaces de tipo IPsec hacemos lo mismo en el otro equipo. Ahora creamos la “Static Routes” para que pueda conocer las rutas y para eso en “Static Routes”, “Create New” en “Destination” ponemos la red del otro SITE y en “Interface” seleccionamos el SDWAN que creamos (“IPsec”). Ahora crearemos la Policy correspondiente donde el “Outgoing Interface” será “IPsec” y por su puesto sin NAT con su respectiva reversa y ya con esto tenemos comunicaciones entre las 2 VPNs desde el SITEa hacia el SITEb por dentro del SDWAN. Ahora crearemos alguna regla con SD-WAN Rules para que el trafico valla por el enlace que tenga menos latencia pero para eso necesitamos crear la “Performance SLAs” y se necesita establecer que los parámetros los tomen del ping de la loopback del otro equipo para así monitorear el enlace y esto se hace desde “Network”, “Interfaces”, “Create New” seleccionamos “Interface” y en “Type” seleccionamos “Loopback Interface” para así desde el fortigate SITEa crearemos un performance SLAs contra la Loopback del equipo de SITEb y viceversa para poder medir la calidad de los enlaces. En “Name” le pondremos loopback en “IPNetwork” ponemos la IP de la loopback que en este caso será 172.0.0.1/32 (mascara 32 debido a que es solo una IP) y le habilitamos el ping. El siguiente paso es agregar una segunda fase dos en cada VPN para ingresar la IP de loopback de origen y la ip de loopback de destino y eso se hace abriendo en la VPN editando “Phase 2 selector” con el boton "+ Add" y en advanced se selecciona lo mismo que en la creación de las VPNs. Ahora queda realiza el ingreso de las rutas estáticas de esas loopback en “Static Routes”, “Create New” y en “Destination” ingresamos la IP de la loopback del otro equipo y en “Interface” ingresamos el SDWAN creado llamado IPsec. Luego necesitamos crear las policy para que puedan comunicarse entre las loopbacks donde en “Incoming Interfaces” ingresamos la loopback llamada “loopback” y en “Outgoing Interface” ingresamos “IPsec” con su respectiva reversa. Para poder realizar ping entre las loopback se realiza con el siguiente comando “execute ping-options source X.X.X.X (se ingresa la IP de origen que es la loopback). Debido a esto no funcionaría el performance slas por lo tanto tenemos que asignar el “source” de ese ping en SD-WAN Member y para eso tenemos que habilitar la opción de source mediante los siguientes comandos;
+
+- `Config system sdwan;`
+- `Show;` para ver las interfaces de IPsec y habilitar el campo “source”
+- `Config members;` debido a que members está dentro del contexto config members
+- `Edit 3;` porque en este ´numero está la zona IPsec creada
+- `Get;` para ver las variables que se pueden modificar y encontramos “source”
+- `Set source x.x.x.x;` ponemos la dirección IP de la loopback como origen
+- `Next;`
+- `Edit 4;`
+- `Set source x.x.x.x;` misma direccion IP de loopback pero esta vez es para editar el ISP2
+- `End;`
+- `End;`
+
+Se hace la misma configuración en el otro fortigate y luego de esto podemos programar el “perfomance SLAs”, “Create New” y en “Name” ponemos “FGTSITEB” (no deja incluir guion), en “Probe mode” ponemos “active” y en “protocol” seleccionamos “Ping”, en “Server” ponemos la dirección IP de la loopback del SITEb “172.20.0.2”, en “Participants” tenemos que agregar las VPNs de los sites, habilitamos los “SLA Target”. Ahora crearemos la “SD-WAN Rules” para poder indicar si queremos que valla por un enlace que seleccionemos de forma manual, con mejor calidad, menor costo o maximizar el ancho de banda. En “Name” pondremos IPSEC-LATENCIA, “Source address” all, en la sección de “Destination” “Address” tendremos que crear el objeto addres con la red del otro extremo en “Create”, “Address” y le pondremos LAN-SITE-B, “Type” Subnet, “IP,Netmask” la ip de la LAN del site b 10.0.2.0/24 y aceptamos para luego seleccionar este objeto, “Protocol Number” ANY, y el criterio que seleccionaremos será “Best Quality” para poder jugar con el deelay del enlace, en “interface preference” seleccionamos ambas VPNs, “Zone Preference” IPsec, “Measured SLA” seleccionamos el SLA creado FGTSITEB, y en “Quality criteria” Latency. Ya con esto SD-WAN manejará el trafico del enlace según el criterio indicado.
+
+## Autenticación activa + LDAP
+
+Autenticacion activa quiere decir que podemos crear policys para navegar en internet en general o a ciertos sitios en particuales y cuando un usuario quiera acceder a esos sitios o a internet en general se le solicite que ingrese credenciales. 
+### Creacion de un usuario local en Fortigate 
+
+Vamos a "user & Authentication", luego a "User Definition" y en "Create New" seleccionamos "Local User" para luego establecer un usuario y contraseña, en "Two-factor Authentication" lo dejaremos desactivado y en "Extra Infor" solo dejaremos que la cuenta de "User Account Status" está "Enable" y no asignaremos ningun grupo al usuario y con esto ya creamos el usuario "Elias"
+![untitled](/assets/img/fortigate/forti127.png)
+
+### Asignar el usuario a la politica
+
+Ahora agregaremos el usuario a la politica de internet para que cuando quiera navegar pida las credenciales correspondientes y esto se hace en "Policy & Objects", "Firewall Policy" y en "Source" agregamos el usuario en la pestaña "User" y con esta combinacion quiere decir que solo se aceptará la navegacion por internet desde el "Active Directory" al usuario "Elias"
+![untitled](/assets/img/fortigate/forti128.png)
+
+En esta imagen se aprecia como pide el usuario y contraseña correspondiente para que pueda navegar por internet
+![untitled](/assets/img/fortigate/forti129.png)
+
+### Autenticacion Activa con usuarios del Active Directory
+
+En nuestro controlador de dominio tenemos 3 usuarios (user1, user2 y user3) y un grupo que se llama VIP que tiene a user1 y user2. Lo que queremos hacer es una autenticacion activa pero utilizando los usuarios del dominio y para eso primero tenemos que conectar o vincular nuestro fortigate con el controlador de dominio y esto se hace en "User & Authentication", "LDAP Server", "Create new", en "Name" le pondremos LDAP, "Server IP/Name" le ponemos la IP del servidor, "Server Port" queda por defecto, "Common Name Identifier" que significa con qué nombre se identificará el usuario le ponemos SAMAccountName que significa que se tiene que autenticar con el "nombre de usuario" en cambio si le ponemos solo cn significa que se tiene que tiene que autenticar con el "nombre para mostrar", en "Blind Type" le ponemos la opcion "Regular" y en "Username" le ponemos primero el nombre del dominio con una contrabarra y el nombre de usuario que en este caso en nombre del dominio es "adatum" y el usuario es "administrator" y quedaria de esta forma adatum\administrator y en "Pasword" la contraseña de la sesion luego de esto hacemos click en "Test Connectivity" y si sale "Successful" vamos a "Browse" en "Distinguished Name" y con esto nos muestra todo el arbol de usuarios del AD y tenemos que seleccionar la raiz del dominio para poder enlazar todos los usuarios y con esto hacemos un conector LDAP entre el fortigate y el DC
+![untitled](/assets/img/fortigate/forti130.png)
+
+Ahora crearemos el usuario pero en vez del tipo local lo haremos mediante LDAP y esto se hace en "user & Authentication", "user Definition" y seleccionamos la opcion "Remote LDAP User", en "LDAP Server" seleccionamos el que creamos ("LDAP"), y luego mostrará todos los usuarios que se encuentran en el AD y seleccionaremos el user1 y con boton derecho seleccionar "+ Add Selected" y ese usuario se va a la pestaña "Selected" y por ultimo click en  "Submit"
+![untitled](/assets/img/fortigate/forti131.png)
+
+Ahora lo agregaremos a la politica donde en "Source" en la pestaña de "User" se encuntra user1 y la agregamos a la politica actual lo que significaria que para navegar a internet tiene que ser a travez del Active Directory y se tiene que ingresar las credenciales del usuario user1
+![untitled](/assets/img/fortigate/forti132.png)
+
+## FSSO - Usando DC Agent y Collector Agent
+
+Fortigate Single Sign On (FSSO) es una autenticacion pasiva en donde se utiliza el login que los usuarios realizan en sus computadoras dentro del dominio para que el fortigate autorice la navegacion o la autorizacion (segun la politica) sin necesidad de volver a pedir nuevas contraseñas ya que el usuario ya se encontrará autorizado una vez ingrese sus credenciales del dominio. Todo esto se realiza usando DC Agent Mode Process y Collector Agent. DC Agent Mode Process capturará el evento de sesion de la computadora y este lo enviará a Collector Agent que es otro software que generalmente se instala en el DC donde tambien tenemos instalado el DC Agent y una vez que el Collector Agent recibe los eventos de login se los reenvia al equipo fortigate y de esta manera el equipo fortigate tiene el User name, Host name, IP address, user group(s) a los que ese usuario pertenece. Este modo es el mas utilizado de los 3 modos que existen (DC Agent Mode Process, Collector Agent-Based Polling Mode process y Agentless Polling Mode Process) debido a que es la mas escalable en empresas donde tenemos mas de un DC instalando el DC Agent y Collector Agent en cada servidor, otra ventaja de este modo es que controla el estado de las workstations ya que el Collector Agent está constantemente comprobando si el usuario tiene su equipo prendido o si cambio de IP y así mantiene actualizado el fortigate con esa informacion.
+
+Primero tenemos que instalar el "Fortinet Single Sign On Agent" en el servidor de dominio ingresando el usuario y password del administrador del servidor y una vez que termina de instalarlo seleccionamos para que corra tambien "DC Agent" donde en "Collector Agent IP address" ponemos la misma IP del servidor y todo lo demas por defecto y en la siguiente ventana seleccionamos el dominio que vamos a monitorear, en la siguiente nos pregunta si queremos NO monitorear algun usuario (en este caso no seleccionamos ninguno), luego muestra si queremos que trabaje en modo "Polling Mode" o "DC Agent Mode" siendo este ultimo el seleccionado y por ultimo se necesita reiniciar el equipo. Una vez que reinicia tenemos tres Apps nuevas, una es install DC Agent, otra es Unistall DC Agent y la ultima Configure Fortinet Single Sign On Agent donde el DC Agent no tiene menu de configuracion y corre en background por lo tanto nunca lo abrimos pero el Configure FSSO si tenemos que trabajar y configurar y lo primero que vemos es que en "Collector Agent Status" se encuentre en "RUNNING" 
+![untitled](/assets/img/fortigate/forti133.png)
+
+En "Monitoring user logon events" le indicamos que monitoree los eventos de loging de los usuarios, en "Suport NTLM authentication" para que de soporte a la autenticacion NTLM que utilizaremos mas adelante, luego vienen los puertos por defectos, logging "Log Level" siempre en Warning para no sobrecargar la aplicacion, "log file size limit" son suficientes con 100 MB, "Log logon events in separate logs" es para que cada usuario tenga su evento pero lo dejaremos sin marcado, Authentication "Requiere authenticated connection from FortiGate" es importante seleccionarlo y poner una contraseña para luego ingresarla en el fortigate, Timers "Workstation verify interval" es el tiempo en minutos en que el collector verifica que el workstation se encuentra activo, "Dead entry timeout interval" son los minutos que tomará por muerto la entrada al sistema, "IP address change verify interval" son el intervalo en segundo que verificará que no se cambie de IP el workstation, "Cache user group lookup result" viene por defecto desactivado pero es recomendable activarlo, en "Show Service Status" encontraremos el estatus de los dispositivos, "Show Monitored DCs" son los DC que estamos monitoreando y que en nuestro caso es uno, "Show Logon Users" son los usuarios logeados, "Set Directory Access Information" es para para cambiar el modo standar o advance que seleccionamos al instalarlo, "Set Group Filters" nos muestra que grupos de AD nos interesa monitorear y a qué fortigate enviarlo, "Set Ignore user List" son los usuarios que no queremos monitorear, "Sync Configutarion With Other Agents" podemos seleccionar si tenemos mas DC y si en cada uno de ellos tenemos agentes le podemos indicar mediante la direccion IP de cada DC que sincronice sus agentes
+![untitled](/assets/img/fortigate/forti134.png)
+
+### Conector de Fortigate a Collector
+
+vamos a "Security Fabric", "External Connectors", "Create New" y seleccionamos el "FSSO Agent On Windows AD", luego le ponemos un nombre, en "Primary FSSO agent" le ponemos la direccion IP del agente y en "Password" va la contraseña del programa y NO del usuario administrator, "user group source" lo que hace es donde mirar el filtro de grupos que podria ser local mediante LDAP o con Collector Agent que es este caso y por ultimo click en "Apply & Refresh" y con esto mostrará los usuarios y grupos del AD
+![untitled](/assets/img/fortigate/forti135.png)
+
+Ahora vamos a las politicas en "Policy & Objetcts", "Firewall Policy", y editaremos el "Source" para salir a internet para agregar el grupo VIP con la idea de que cuando inicie sesion en el computador el usuario user1 y user2 puedan navegar por internet y el user3 y administrador no puedan navegar debido a que estos ultimos no se encuentran en ese grupo 
+![untitled](/assets/img/fortigate/forti136.png)
+
+En "Dashboard", "Users & Devices" y seleccionamos "Show all FSSO Logons" podemos ver los usuarios conectados 
+![untitled](/assets/img/fortigate/forti137.png)
+
+Como es autenticacion pasiva solo con logearse con los usuarios de AD no pide credenciales para navegar a internet y en este caso solo le dimos acceso a internet a los usuarios que están dentro del grupo VIP.
+
+## FSSO - Collector Agent-Based Polling Mode process
+
+En este modo no se utiliza el DC Agent y solo se utiliza el Collector Agent y este se va a conectar al DC y hará la extraccion (Polling) de los eventos de loging y los reenviará a nuestro fortigate. Con esto esto explicado haremos la desintalacion de DC Agent pero el Collector lo dejaremos. Ahora tenemos que realizar el cambio para que pueda buscar los logs del servidor y este se realiza desde el Collector en "Show Monitored DCs" y en "Select DC to Monitor" en la seccion Working Mode seleccionamos "Polling Mode" y seleccionamos "Check Windows Security Event Logs using WMI" y tenemos que agregar el DC 
+![untitled](/assets/img/fortigate/forti138.png)
+
+Luego al hacer "Refresh Now" debiese mostrar el DC correspondiente. Ahora agregaremos un "Set Group Filter" para detallarle al fortigate solo los grupos que nos interesa que conozca y no todos los grupos del AD
+![untitled](/assets/img/fortigate/forti139.png)
+
+Ahora utilizaremos el "Set Ignore User List" para que ignore el user2 aunque se encuentre en el grupo VIP 
+![untitled](/assets/img/fortigate/forti140.png)
+
+Luego vamos a "Security Fabric", "External Connectors" y lo configuramos igual al anterior con FSSO AGent on Windows AD y en politicas ponemos en "Source" seleccionamos el unico grupo ADATUM/VIP en la pestaña "User" ya que a diferencia de antes que mostraba todos los grupos de AD ahora solo muestra ese debido al filtrado que realizamos en "Set Group Filters" y con esto solo el user1 podrá navegar a internet debido a que user2 aunque pertenece al grupo VIP se encuentra ignorado en "Set ignore User List". y si vamos a eventos aunque me conecte con el user2 no aparece en "Log & Report", "Events", "User Events" debido a que el collector no le enviará ese log al fortigate y por ende este usuario no lo conoce.
+
+## FSSO - Agentless
+
+En este modo no se requiere ningun software instalado en el DC por lo tanto desintalamos los programas y sacamos de la politica el grupo agregado y por ultimo en "Security Fabric", "External Connectors" eliminamos la creada. Ahora crearemos un nuevo conector pero del tipo Poll y este se hace en "Security Fabric", "External Connectors" y seleccionamos el "Poll Active Directory Server" donde en "Server IP/Name" es la IP del DC, "User" el usuario del DC, "Password" la contraseña del DC, "LDAP server" el que creamos anteriormente y habilitar el "Enable Polling" para que extraiga los logs del AD, y finalmente en "users/Groups" editamos los usuarios o grupos que gracias al LDAP tenemos del AD haciendo click derecho en cada usuario o grupo y seleccionando "add selected" donde estos apareceran en la pestaña "Selected"
+![untitled](/assets/img/fortigate/forti141.png)
+
+Ya con esto podemos agregar cada usuario o grupo en las policys para poder autorizar la navegacion a internet
+![untitled](/assets/img/fortigate/forti142.png)
+
+## Configuration save mode
+
+Es un modo en el cual se revierten los cambios en la configuración que hicimos en caso de que no se confirmen después de ciertos segundos indicados. De esta forma en caso de estar configurándolo de forma remota y tuvimos una desconexion del equipo y debido a esta configuración no tenemos acceso nuevamente al equipo de forma remota (cambio de una IP remota por ejemplo) luego de pasar unos segundos el equipo se reinicia y vuelve la configuración inicial anterior a la modificación debido a que no confirmamos el cambio mientras estábamos desconectado. Para configurar esta función se hace en “System”, “Settings”, en la sección Workflow Management aparece “Configuration save mode” que por defecto vienen en “Automatic” donde los cambios se guardaran de inmediato, y si lo cambiamos a “Workspace” y en “Revert upon timeout” indicamos la cantidad de segundos que el equipo esperará para que confirmemos los cambios ahora tendremos que confirmar la modificación para que se mantengan los cambios
+
+## Comandos útiles para diagnostico por CLI
+
+### Modo de conservación de memoria
+
+En caso de que el equipo fortigate llegue a cierto limite de capacidad de memoria este actuará según el umbral donde el umbral “Red” significa que tiene una memoria utilizada de 88% lo que hace que el equipo ya no admite ningún cambio en su configuración lo que significa que no podemos cambiarle absolutamente nada pero sigue aceptando sesiones nuevas por parte de los equipos en la red por lo tanto el trafico de la red se mantiene. El siguiente umbral es el “Extreme” donde para entrar, el equipo tiene que tener un consumo del 95% de memoria y en este umbral no se aceptarán sesiones nuevas. Para salir del modo “Extreme” el equipo tiene que llegar a una utilización de memoria del 82% que es el modo “Green” y una vez que baja de este ultimo porcentaje de memoria el estado de modo de conservación de memoria de desactiva automáticamente y para ver el estado actual de la memoria se realiza con el siguiente comando
+
+- `Diagnose hardware sysinfo conserve;` donde lo primero que se ve es si el modo de conservación de memoria está on o off, luego cuanta memoria RAM tiene el equipo, cuanta memoria está usando, cuanta memoria puede liberar, y luego indica los 3 humbrales (extreme, red y green). Para editar el porcentaje de los umbrales se realiza de la siguiente manera
+
+- `Config system global;`
+- `Set memory-use-threshold-red porcentaje;`
+- `Set memory-use-threshold-expreme porcentaje;`
+- `Set memory-use-threshold-green porcentaje;`
+
+### Obtener info adicional de interface de red a nivel de hardware
+
+Para ver el detalle del puerto 1 en este caso se podrían ver los errores en “Rx errors:” y en “Tx errors” con el siguiente comando
+
+- `Diagnose hardware deviceinfo nic port1;`
+
+### Procesos del sistema
+
+- `Diagnose sys top;` se pueden ver los procesos del sistema junto con el PID (proces ID)
+- `Diagnose sys kill 11 <N°PID>;` donde el numero 11 recomienda fortinet para poder generar un ticket de soporte
+
+### debug IPsec
+
+Cuando alguna fase de una VPN no levanta se le puede realizar un debug aplicando algún filtro por el nombre de la fase de la VPN y esto se realiza de la siguiente forma
+
+- `Diagnose debug disable;` para asegurarnos que no esté algún debug de otro proceso corriendo
+- `Diagnose vpn ike log filter clear;` para limpiar en caso de que ya se encuentre algún filtro
+- `Diagnose vpn ike log filter name <>;` donde en este caso haremos el filtro por el nombre de la fase1 de vpn
+- `Diagnose debug application ike -1;` con el -1 nos mostrará toda la información posible
+- `Diagnose debug enable;` para habilitar el diagnose
+- `Diagnose debug disable;` para detener el debug
+
+En este caso muestra “parse error probable pre-shared secret mismatch” que sgnifica que probablemente no tenga la misma clave en la fase 1 de algún equipo. Por lo tanto es recomendable volver a ingresar la contraseña de la fase 1 en las VPNs y probar nuevamente si levanta
+![untitled](/assets/img/fortigate/forti143.png)
+
+### Traffic Flow
+
+Es cuando pensamos que está todo bien configurado sin embargo el trafico no hace lo que nosotros queremos. Por ejemplo cuando configuramos una policy y nos equivocamos en asignar la interfaz correcta
+
+- `Diagnose debug disable;` para asegurarnos que no se encuentre otro debug corriendo
+- `Diagnose debug Flow trace stop;` para detener la traza del flujo
+- `Diagnose debug Flow filter clear;` para limpiar los filtros
+- `Diagnose debug reset;`
+- `Diagnose debug Flow filter saddr <ip de origen>;` el filtro en este caso será por origen para ver el trafico
+- `Diagnose debug Flow filter daddr <8.8.8.8>;` para filtrar por salida a internet con los DNS de Google
+- `Diagnose debug Flow show function-name enable;`
+- `Diagnose debug console timestamp enable;` para ver el timestamp en tiempo real
+- `Diagnose debug Flow trace start 999;` para que nos muestre a partir de la línea 999
+- `Diagnose debug enable;` para activarlo
+
+Luego de esto generamos tráfico a través de un PING a internet para ver el debug y lo primero que dice es que recibimos un paquete del protocolo=1 (ICMP) con origen 10.0.1.10 hacia 8.8.8.8 por el puerto 4. En la siguiente linea indica que no habian sesiones previas por lo tanto crea una nueva sesion. Luego dice que encontró una ruta por el Gateway 200.212.31.2 por el puerto 2. En la tercera linea el Forward Handler nos dice que el trafico está siendo denegado por la policy 0 que esa es la default Implicit, y esto es porque no hay ninguna regla que haga match con el trafico entre el DC y los DNS de google (debido a que cambiamos el puerto de la regla de internet) solo hace match con la implicita.
+
+Una vez que ponemos el puerto correctamente lo que nos indica primero es hace una nueva locacion de la sesion. Luego encuentra la ruta. La tercera linea indica que hace el sourscenat con la IP publica (ISP1) y en la cuarta linea nos indica que es permitida por la policy 1.
+
+
+## Actualizar el fortiOS
+
+En el menu de "System", "Firmware", en la primera parte nos indica que version tenemos y si hay alguna disponible. En la seccion Upload Firmware podremos subir el archivo de actualizacion de forma manual donde se puede descargar desde https://support.fortinet.com/asset/#/dashboard donde se encuentran registrados nuestros equipos y en la parte de "Support" abrimos "Firmware Download", luego seleccionamos el producto que tenemos y luego a "Download" buscamos la version de nuestro equipo y su actulizacion para descargar para luego buscar entre todos los firmwares el modelo exacto de nuestro equipo para luego hacer click en "HTTPS Checksum" para descargarlo. Otra opcion es actualizarlo directamente desde el fortigate donde al hacer click en "Backup config and upgrade" hará un backup de todo el fortigate con la version actual y una vez terminado el backup descargará una imagen de la nueva version y la actualizará de forma automatica. Si no queremos la ultima version seleccionamos "All available" y podemos descargar la anterior a la ultima. En caso de que queramos instalar una version mas antigua (hacer un downgrade) abrimos la opcion "Older Firmware" para ver todas las versiones anteriores. En caso de que la version actual sea muy antigua es necesario conocer el upgrade path que es el camion a realizar para llegar a la ultima version instalando ciertas actualizaciones indicadas en la pagina https://docs.fortinet.com/upgrade-tool donde primero seleccionamos el modelo de fortigate que tenemos. Luego indicamos en "Current FortiOS Version" cual tenemos actualmente y en "upgrade to FortiOS Version" seleccionamos que version queremos llegar y una vez hacemos click en "GO" nos mostrará las versiones que tenemos que instalar antes de llegar a la ultima. Como recomendacion si en el equipo tenemos solo configuraciones basicas basta con hacer un backup instalar la ultima version y realizar las configuraciones por cuenta propia ya que demora menos tiempo que instalar todas las versiones requeridas para llegar a la ultima version. En caso de querer realizar la actualizacion desde la CLI se hace con el siguiente comando
+
+- `execute restore image ftp nombre-del-archivo ip-del-ftp usuario pass;`
+
+## Audit CLI
+
+Para auditar todos los comandos o acciones que se ejecutan desde la CLI se realiza con el siguiente comando
+- `config system global;`
+- `get | grep cli;` para buscar esta funcion y ver si está enable o disable
+- `set cli-audit-log enable; para habilitar la funcion
+- `end;` 
+
+para ver el log de la CLI tenemos que ir a "Log & Report", "Events", "System Events" y veremos todos los comandos ingresados
+
+## Port forwarding mediante objetos VIPs
+
+prueba del hachtag
