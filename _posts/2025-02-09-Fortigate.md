@@ -2,7 +2,7 @@
 title: FORTIGATE (firewall)
 date: 2025-02-09 14:10:00 +0800
 categories: [fortinet, firewall]
-tags: ["fortigate, fortinet, firewall"]     # TAG names should always be lowercase
+tags: ["fortigate, fortinet, firewall, VPN IP-sec, VPN-SSL, IPS, Web Filter, SD-WAN"]     # TAG names should always be lowercase
 ---
 ## Comandos basicos Fortigate
 
