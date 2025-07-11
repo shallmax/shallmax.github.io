@@ -16,10 +16,9 @@ timezone: America/Santiago
 
 title: Elias Campos Sagredo # the main title
 
-tagline: Entusiasta aprendiz | Tec en Redes y Telecomunicaciones | Estudiante Ingenieria en CiberSeguridad |   # it will display as the subtitle
+tagline: Blog realizado para mantener mis apuntes en linea. Tecnico en Conectividad, Redes y Telecomunicaciones. Estudiante Ing. en CiberSeguridad / ¿Red Team o Blue Team?...  # it will display as the subtitle
 
-description: >-
- Blog realizado para mantener mis apuntes en linea. Tecnico en Conectividad, Redes y Telecomunicaciones. Estudiante Ing. en CiberSeguridad / ¿Red Team o Blue Team?...# used by seo meta and the atom feed
+description: >- # used by seo meta and the atom feed
 
 
 # Fill in the protocol & hostname for your site.
@@ -29,7 +28,7 @@ url: "https://shallmax.github.io"
 github:
   username: shallmax # change to your GitHub username
 
-# twitter:
+twitter:
   #username: twitter_username # change to your Twitter username
 
 social:
@@ -99,7 +98,7 @@ theme_mode: dark # [light | dark]
 cdn:
 
 # the avatar on sidebar, support local or CORS resources
-avatar: /assets/favicon/shallmax.png
+avatar: /assets/favicon/shallmax-512x512.png
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.
