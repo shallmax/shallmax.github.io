@@ -3,7 +3,7 @@ title: Full Disk Encryption (FDE)
 date: 2025-07-13 14:10:00 +0800
 categories: [cifrado , proteccion de datos en reposo]
 tags: ["bitlocker , fde "]     # TAG names should always be lowercase
-author: owen
+author: owner
 image:
     path: assets/img/FDE/header_fde.webp
     alt: fde
