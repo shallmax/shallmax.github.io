@@ -5,7 +5,7 @@ categories: [cifrado , proteccion de datos en reposo]
 tags: ["bitlocker , fde "]     # TAG names should always be lowercase
 author: owner
 image:
-    path: assets/img/FDE/header_fde.webp
+    path: /assets/img/FDE/header_fde.webp
     alt: fde
 ---
 

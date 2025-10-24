@@ -5,7 +5,7 @@ categories: [fortinet, firewall]
 tags: ["fortigate, fortinet, firewall, vpn ip-sec, vpn-ssl, ips, web filter, sd-wan"]     # TAG names should always be lowercase
 author: owner
 image:
-    path: assets/img/fortigate/header_fortigate.webp
+    path: /assets/img/fortigate/header_fortigate.webp
     alt: FORTIGATE
 ---
 ## Comandos basicos Fortigate
