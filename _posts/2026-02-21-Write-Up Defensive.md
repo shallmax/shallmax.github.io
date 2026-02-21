@@ -66,16 +66,3 @@ Vamos a utilizar varias herramientas de "DidierStevensSuite" como por ejemplo zi
 Herramientas y referencias:
 
 Hoja de trucos de SANS para analizar documentos maliciosos:
-[https://www.sans.org/posters/cheat-sheet-for-analyzing-malicious-documents/](https://www.sans.org/posters/cheat-sheet-for-analyzing-malicious-documents/)
-
-Didier Stevens (Zipdump.py): [https://github.com/DidierStevens/DidierStevensSuite/blob/master/zipdump.py](https://github.com/DidierStevens/DidierStevensSuite/blob/master/zipdump.py)
-
-Didier Stevens (re-search.py): [https://blog.didierstevens.com/2021/02/22/re-search-py-and-custom-validations/](https://blog.didierstevens.com/2021/02/22/re-search-py-and-custom-validations/)
-
-VirusTotal: [https://www.virustotal.com/gui/ip-address/175.24.190.249/relations](https://www.virustotal.com/gui/ip-address/175.24.190.249/relations)
-
-Referencia XML de Open Office: [http://officeopenxml.com/anatomyofOOXML.php](http://officeopenxml.com/anatomyofOOXML.php)
-
-Didier Stevens (de números a cuerdas): [https://github.com/DidierStevens/DidierStevensSuite/blob/master/numbers-to-string.py](https://github.com/DidierStevens/DidierStevensSuite/blob/master/numbers-to-string.py)
-
-Vulnerabilidad en la ejecución remota de código Microsoft MSHTML: [https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-40444](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-40444)
