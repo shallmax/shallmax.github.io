@@ -66,3 +66,4 @@ Vamos a utilizar varias herramientas de "DidierStevensSuite" como por ejemplo zi
 Herramientas y referencias:
 
 Hoja de trucos de SANS para analizar documentos maliciosos:
+([https://www.sans.org/posters/cheat-sheet-for-analyzing-malicious-documents])
