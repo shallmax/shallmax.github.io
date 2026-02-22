@@ -9,7 +9,7 @@ image:
     alt: Write-Up Defensive
 ---
 
-## MSHTML ##
+## MSHTML LetsDefend ##
 
 Este desafio consta de analizar cuatro documentos maliciosos (maldoc), descubrir direcciones IP y Dominios ocultos y usar la informacion para averiguar qué vulnerabilidad o CVE está explotando el actor de amenaza. 
 
@@ -63,8 +63,20 @@ Vamos a utilizar varias herramientas de "DidierStevensSuite" como por ejemplo zi
     ![untitled](/assets/img/write-up_def/write-up14.png)
     La respuesta a la pregunta 5 seria CVE-2021-40444
 
+
 Herramientas y referencias:
 
 Hoja de trucos de SANS para analizar documentos maliciosos:
 https://www.sans.org/posters/cheat-sheet-for-analyzing-malicious-documents
 
+Didier Stevens (Zipdump.py): 
+https://github.com/DidierStevens/DidierStevensSuite/blob/master/zipdump.py
+
+Didier Stevens (re-search.py): 
+https://blog.didierstevens.com/2021/02/22/re-search-py-and-custom-validations/
+
+Referencia XML de Open Office: 
+http://officeopenxml.com/anatomyofOOXML.php
+
+Didier Stevens (de números a string):
+https://github.com/DidierStevens/DidierStevensSuite/blob/master/numbers-to-string.py
