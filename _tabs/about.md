@@ -9,7 +9,7 @@ order: 4
   
 #### Contacto #### 
 - campos.sagredo.e@gmail.com
-- https://www.linkedin.com/in/elias-campos-s/
+- [https://www.linkedin.com/in/elias-campos-s/](https://www.linkedin.com/in/elias-campos-s/)
 
 
 #### Resumen Profesional ####
