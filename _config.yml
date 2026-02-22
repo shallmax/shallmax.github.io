@@ -16,7 +16,7 @@ timezone: America/Santiago
 
 title: Elias Campos Sagredo # the main title
 
-tagline: Blog realizado para mantener mis apuntes en linea. Tecnico en Conectividad, Redes y Telecomunicaciones. Estudiante Ing. en CiberSeguridad / ¿Red Team o Blue Team?...  # it will display as the subtitle
+tagline: Portafolio creado de algunos de mis proyectos. Tecnico en Conectividad, Redes y Telecomunicaciones. Estudiante Ing. en CiberSeguridad / ¿Red Team o Blue Team?...  # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
 
@@ -39,10 +39,10 @@ social:
   links:
     # The first element serves as the copyright owner's link
     - https://shallmax.github.io # change to your Twitter homepage
-    - https://www.linkedin.com/in/elias-campos-889a2531a/ # change to your GitHub homepage
+    - https://www.linkedin.com/in/elias-campos-s/ # change to your GitHub homepage
     # Uncomment below to add more social links
     # - https://www.facebook.com/username
-    # - https://www.linkedin.com/in/username
+    - https://www.linkedin.com/in/elias-campos-s/
 
 # Site Verification Settings
 webmaster_verifications:
