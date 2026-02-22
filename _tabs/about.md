@@ -5,9 +5,31 @@ order: 4
 ---
 
 
+## Elias Campos Sagredo ##
+  
+#### Contacto #### 
+campos.sagredo.e@gmail.com
+https://www.linkedin.com/in/elias-campos-s/
 
+#### Resumen Profesional ####
+> Titulado en Tecnico en Conectividad, redes y telecomunicaciones de INACAP y actualmente cursando tercer año de Ingenieria en Ciberseguridad donde encontré mi verdadero gusto por las TICs.
+Poseo una base solida de configuracion de Firewall Fortigate, routers y switches CISCO. Tengo conocimientos basicos en Linux, Python, y configuraciones de Servidores Windows en Active Directoy y GPOs. 
+Trabajé por unos 4 años prestando servicios de IT Outsourcing a distintas pequeñas empresas donde aprendí a solucionar los problemas que se presentan dia a dia, trabajando bajo presion y en equipo. 
+Proximamente me certificaré de Comptia Security+ por lo que tengo buenos conocimientos de las bases de ciberseguridad.
+Actualmente estoy aprendiendo de SOC (Security Operation Center) detectando y analizando distintos ataques reales junto con la implementacion de un laboratorio SOC. 
 
-> Tecnico en Conectividad, redes y telecomunicaciones y ahora estudiando Ingenieria en Ciberseguridad donde encontré mi verdadero gusto por la tecnologia ya que me encanta aprender cosas nuevas y en este mundo de la ciberseguridad es algo de nunca acabar. Adminto que muchas veces es abrumador debido a las horas que se necesitan para encontrar lo que se busca pero una vez logrado el objetivo quieres un nuevo desafio.
-En este momento tambien aprendiendo de FortiGate, un poco de OWASP top-10 y certificaciones basicas de CISCO Security.
+#### Competencias Profesionales ####
+- Administracion de Sistemas; Manejo de entornos Windows y Linux, gestion de usuarios, permisos y politicas de seguridad.
+- Seguridad Informatica; Gestion de Accesos, Monitoreo de Logs, Aplicacion de Actualizaciones y Hardening en sistemas.
+- Redes y comunicaciones; Comprension de conceptos fundamentales de redes como por ejemplo IOS CLI, Modos de Comandos, Gestion de Dispositivos, Interfaces, VLANs en Switches Capa 2, Puertos de Accesos y Troncales, Enrutamientos Estaticos y Dinamicos, DHCP, Respaldo de Configuracion, entre otros.
 
+#### Habilidades Blandas ####
+- Aprendizaje continuo.
+- Proactividad.
+- Trabajo en equipo.
+- Organizacion y Atencion al Detalle
 
+#### Habilidades Tecnicas ####
+- Analisis de Vulnerabilidades; NESSUS, OpenVas y Hardening de Sistemas.
+- Sistemas Operativos; Linux (Basico), Windows Server AD (Gestion de Usuarios y Politicas GPO), DNS, DHCP, FTP.
+- Redes; TCP/IP, OSI, Configuracion de Firewall FortiNet (NGFW), Configuracion de Router y Switch CISCO, Configuracion de AP Multi Marcas.
