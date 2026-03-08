@@ -8,8 +8,9 @@ order: 4
 ## Elias Campos Sagredo ##
   
 #### Contacto #### 
-- campos.sagredo.e@gmail.com
+- Correo Electronico: campos.sagredo.e@gmail.com
 - [https://www.linkedin.com/in/elias-campos-s/](https://www.linkedin.com/in/elias-campos-s/)
+- [Insignias CISCO](https://www.credly.com/users/elias-campos-s/badges#credly)
 
 
 #### Resumen Profesional ####
