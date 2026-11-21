@@ -14,10 +14,14 @@ image:
 `#!/bin/bash`
 
 `function ctrl_c(){`
-    `echo -e "\n\n[!] Saliendo ... \n"`
-    `exit 1`
+
+   `echo -e "\n\n[!] Saliendo ... \n"`
+   `exit 1`
+
 `}`
+
 `#Ctrl+C`
+
 `trap ctrl_c INT`
 
 `sleep 10`
