@@ -11,15 +11,15 @@ image:
 
 ## Function_Ctrl+C ##
 
-#!/bin/bash
+`#!/bin/bash`
 
-function ctrl_c()\{
-    echo -e "\n\n[!] Saliendo ... \n"
-    exit 1
-\}
-#Ctrl+C
-trap ctrl_c INT
+`function ctrl_c(){`
+    `echo -e "\n\n[!] Saliendo ... \n"`
+    `exit 1`
+`}`
+`#Ctrl+C`
+`trap ctrl_c INT`
 
-sleep 10
+`sleep 10`
 
 ![untitled](/assets/img/bash/bash1.png)
