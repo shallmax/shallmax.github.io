@@ -24,4 +24,3 @@ trap ctrl_c INT
 
 sleep 10
 ```
-![untitled](/assets/img/bash/bash1.png)
